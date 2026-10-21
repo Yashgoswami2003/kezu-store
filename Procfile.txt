@@ -1,0 +1,1 @@
+web: gunicorn kezu_store.wsgi:application
