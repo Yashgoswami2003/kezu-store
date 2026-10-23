@@ -1,0 +1,542 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KEZU & Co. | Luxury Fragrances</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Georgia', serif; background-color: #0d0d0d; color: #f5f5f5; scroll-behavior: smooth; }
+        .gold-text { color: #d4af37; }
+        .gold-bg { background-color: #d4af37; }
+        .gold-border { border-color: #d4af37; }
+        .tab-btn.active { border-bottom: 2px solid #d4af37; color: #d4af37; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-black text-gray-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Top Delivery Policy Announcement Bar -->
+    <div class="bg-[#d4af37] text-black text-center py-2 px-4 font-semibold text-sm tracking-wide">
+        🚚 Special Offer: ₹100 Delivery Charge for 1 Bottle | FREE Delivery on 2+ Bottles!
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-[#d4af37]/30 py-4 px-6 flex justify-between items-center bg-black/90 sticky top-0 z-50 backdrop-blur-md">
+        <!-- Logo Image / Brand Name -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchCategory('womens')">
+            <img src="{% static 'logo.png' %}" alt="KEZU & Co." class="h-10 w-auto object-contain onerror-hide" onerror="this.style.display='none'">
+            <h1 class="text-2xl font-bold tracking-widest gold-text flex items-center">
+                KEZU & CO. <span class="text-xs text-[#d4af37] ml-1">🦋</span>
+            </h1>
+        </div>
+        
+        <!-- Category Tabs -->
+        <nav class="space-x-6 text-sm tracking-wider uppercase hidden md:flex items-center">
+            <button id="tab-womens" onclick="switchCategory('womens')" class="tab-btn active py-1 hover:text-[#d4af37] transition">
+                Women's Collection
+            </button>
+            <button id="tab-mens" onclick="switchCategory('mens')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
+                Men's Collection
+            </button>
+            <button id="tab-couples" onclick="switchCategory('couples')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
+                Couples Gift
+            </button>
+            <button id="tab-about" onclick="switchCategory('about')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
+                About Us
+            </button>
+        </nav>
+
+        <div>
+            <a href="#cart" class="border gold-border gold-text px-4 py-2 rounded text-sm hover:bg-[#d4af37] hover:text-black transition">Cart (<span id="cart-count">0</span>)</a>
+        </div>
+    </header>
+
+    <!-- Mobile Category Switcher -->
+    <div class="flex justify-center space-x-4 py-3 border-b border-gray-800 md:hidden bg-[#111] overflow-x-auto px-2">
+        <button id="mob-tab-womens" onclick="switchCategory('womens')" class="text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap">Women's</button>
+        <span class="text-gray-600">|</span>
+        <button id="mob-tab-mens" onclick="switchCategory('mens')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Men's</button>
+        <span class="text-gray-600">|</span>
+        <button id="mob-tab-couples" onclick="switchCategory('couples')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Couples Gift</button>
+        <span class="text-gray-600">|</span>
+        <button id="mob-tab-about" onclick="switchCategory('about')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">About Us</button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12 flex-grow">
+        
+        <!-- WOMEN'S COLLECTION SECTION -->
+        <section id="womens-section" class="mb-20">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-light tracking-wide mb-3 gold-text">WOMEN'S COLLECTION</h2>
+                <p class="text-gray-400 italic">Exquisite, Floral & Long Lasting Fragrances</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {% for product in products %}
+                    {% if product.category.name == "Women's Collection" or "BOLD" in product.name|upper or "HUSTLER" in product.name|upper or "DRAMATIC" in product.name|upper or "QUEEN" in product.name|upper or "BEAUTIFUL" in product.name|upper %}
+                    <div class="border border-[#d4af37]/40 rounded-lg p-6 bg-[#111] flex flex-col justify-between shadow-lg h-full">
+                        <div>
+                            <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
+                                {% if product.image %}
+                                    <img id="img-w-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                {% endif %}
+                            </div>
+                            <h3 id="pname-w-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
+                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                        </div>
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Select Size & Price</label>
+                                <select id="size-w-{{ forloop.counter }}" class="w-full bg-black border border-[#d4af37] text-white p-2 rounded" onchange="updatePrice('w-{{ forloop.counter }}')">
+                                    <option value="299" data-price="299" data-size="10ml">10ml - ₹299/-</option>
+                                    <option value="599" data-price="599" data-size="30ml">30ml - ₹599/-</option>
+                                    <option value="999" data-price="999" data-size="50ml">50ml - ₹999/-</option>
+                                </select>
+                                <div class="text-xl font-bold gold-text mt-2" id="price-display-w-{{ forloop.counter }}">₹299</div>
+                                <p class="text-xs text-[#d4af37] mt-1">• 1 Bottle: ₹100 Delivery Charge<br>• 2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
+                            </div>
+                            <div id="action-box-w-{{ forloop.counter }}">
+                                <button onclick="addToCart('w-{{ forloop.counter }}', 'Women')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- MEN'S COLLECTION SECTION -->
+        <section id="mens-section" class="mb-20 hidden">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-light tracking-wide mb-3 gold-text">MEN'S COLLECTION</h2>
+                <p class="text-gray-400 italic">Bold, Intense & Magnetic Fragrances</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {% for product in products %}
+                    {% if product.category.name == "Men's Collection" or "CHARMER" in product.name|upper or "ALPHA" in product.name|upper or "STOIC" in product.name|upper or "ICON" in product.name|upper or "REBEL" in product.name|upper %}
+                    <div class="border border-[#d4af37]/40 rounded-lg p-6 bg-[#111] flex flex-col justify-between shadow-lg h-full">
+                        <div>
+                            <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
+                                {% if product.image %}
+                                    <img id="img-m-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                {% endif %}
+                            </div>
+                            <h3 id="pname-m-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
+                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                        </div>
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Select Size & Price</label>
+                                <select id="size-m-{{ forloop.counter }}" class="w-full bg-black border border-[#d4af37] text-white p-2 rounded" onchange="updatePrice('m-{{ forloop.counter }}')">
+                                    <option value="399" data-price="399" data-size="10ml">10ml - ₹399/-</option>
+                                    <option value="699" data-price="699" data-size="30ml">30ml - ₹699/-</option>
+                                    <option value="1099" data-price="1099" data-size="50ml">50ml - ₹1099/-</option>
+                                </select>
+                                <div class="text-xl font-bold gold-text mt-2" id="price-display-m-{{ forloop.counter }}">₹399</div>
+                                <p class="text-xs text-[#d4af37] mt-1">• 1 Bottle: ₹100 Delivery Charge<br>• 2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
+                            </div>
+                            <div id="action-box-m-{{ forloop.counter }}">
+                                <button onclick="addToCart('m-{{ forloop.counter }}', 'Men')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- COUPLES GIFT SECTION (THE KEZU DUOS) -->
+        <section id="couples-section" class="mb-20 hidden">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-light tracking-wide mb-3 gold-text">THE KEZU DUOS</h2>
+                <p class="text-gray-400 italic">For Two hearts, One story</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {% for product in products %}
+                    {% if product.category.name == "Couples Gift" or product.category.name == "Couples Collection" or "+" in product.name %}
+                    <div class="border border-[#d4af37]/40 rounded-lg p-6 bg-[#111] flex flex-col justify-between shadow-lg h-full">
+                        <div>
+                            <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
+                                {% if product.image %}
+                                    <img id="img-c-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                {% endif %}
+                            </div>
+                            <h3 id="pname-c-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
+                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                        </div>
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Select Size & Price (Pair)</label>
+                                <select id="size-c-{{ forloop.counter }}" class="w-full bg-black border border-[#d4af37] text-white p-2 rounded" onchange="updateCouplePrice('c-{{ forloop.counter }}')">
+                                    <option value="699" data-women="299" data-men="399" data-size="10ml">10ml (Pair) - ₹699/-</option>
+                                    <option value="1299" data-women="599" data-men="699" data-size="30ml">30ml (Pair) - ₹1299/-</option>
+                                    <option value="2099" data-women="999" data-men="1099" data-size="50ml">50ml (Pair) - ₹2099/-</option>
+                                </select>
+                                <div class="text-xl font-bold gold-text mt-2" id="price-display-c-{{ forloop.counter }}">₹699</div>
+                                <p class="text-xs text-[#d4af37] mt-1"><span class="text-green-400 font-bold">FREE Delivery</span> on Couple Sets!</p>
+                            </div>
+                            <div id="action-box-c-{{ forloop.counter }}">
+                                <button onclick="addToCart('c-{{ forloop.counter }}', 'Couples Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ABOUT KEZU & CO. SECTION -->
+        <section id="about-section" class="mb-20 hidden">
+            <div class="max-w-4xl mx-auto border border-[#d4af37]/40 p-8 md:p-12 rounded-2xl bg-[#111] shadow-2xl text-center relative">
+                <h2 class="text-3xl md:text-5xl font-light tracking-widest gold-text mb-4 uppercase">About KEZU & Co.</h2>
+                <div class="w-24 h-0.5 gold-bg mx-auto mb-8 opacity-70"></div>
+                
+                <div class="space-y-6 text-gray-300 text-base md:text-lg leading-relaxed text-justify md:text-center">
+                    <p class="text-xl gold-text font-serif italic text-center font-medium">
+                        "Some memories fade. Some scents don't."
+                    </p>
+                    <p>
+                        We wanted to make perfumes that smell like the things you almost forgot — the first rain, a childhood attic, a sunset that made you stop, a person who felt like home.
+                    </p>
+                    <p>
+                        KEZU & Co. started on quiet evenings, with a heart that wanted to hold onto moments a little longer.
+                    </p>
+                    
+                    <!-- Founder Spotlight Box -->
+                    <div class="my-6 p-6 rounded-xl bg-black/60 border border-[#d4af37]/30 text-center shadow-inner">
+                        <p class="text-gray-200">
+                            Founded by <strong class="gold-text font-semibold">Queeny Yalangi</strong> — Author, poet, entrepreneur and mental health advocate. KEZU was born from the same place her stories come from — a love for feelings that stay. What started as a passion for perfumes slowly became notes in a bottle.
+                        </p>
+                    </div>
+
+                    <p>
+                        Every KEZU fragrance is blended by hand, in small batches, with a lot of patience and a lot of love poured into little bottles, holding big feelings.
+                    </p>
+                    <p>
+                        We make them the way beautiful things should be made — with natural ingredients, soft on your skin, clean on your clothes. Only the memory stays.
+                    </p>
+                    <p>
+                        Composed with fine perfume oils, layered to evolve with your skin. From the first spray to hours later — it wears like a second skin.
+                    </p>
+                    <p>
+                        Each bottle is designed to linger — long-lasting, with a soft trail that stays close, not loud. The kind of luxury that doesn't need to announce itself. It just stays.
+                    </p>
+                </div>
+
+                <div class="mt-10 pt-6 border-t border-[#d4af37]/30">
+                    <p class="text-base md:text-lg font-semibold gold-text tracking-wider">
+                        KEZU & Co — Fragrances and stories, created for every version of you.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cart Section / Professional Cart View -->
+        <div id="cart" class="max-w-3xl mx-auto mt-20 border border-[#d4af37]/40 p-8 rounded-xl bg-[#111] shadow-2xl">
+            <h3 class="text-2xl font-bold gold-text mb-6 border-b border-[#d4af37]/20 pb-3 flex justify-between items-center">
+                <span>Your Shopping Cart</span>
+                <span class="text-sm text-gray-400 font-normal">KEZU & Co.</span>
+            </h3>
+            
+            <div id="cart-items" class="text-gray-300 text-sm mb-6">Your cart is empty.</div>
+            
+            <div id="cart-summary" class="hidden border-t border-gray-800 pt-4 mb-6 space-y-2">
+                <div class="flex justify-between text-gray-300"><span>Subtotal:</span> <span id="cart-subtotal">₹0</span></div>
+                <div class="flex justify-between text-gray-300"><span>Delivery Fee:</span> <span id="cart-delivery">₹0</span></div>
+                <div class="flex justify-between font-bold text-xl gold-text pt-2 border-t border-gray-800"><span>Total Amount:</span> <span id="cart-total">₹0</span></div>
+            </div>
+
+            <!-- Customer Details Form (Mandatory before WhatsApp Checkout) -->
+            <div id="checkout-form-container" class="hidden border-t border-[#d4af37]/30 pt-6 mt-6 space-y-4">
+                <h4 class="text-sm font-semibold gold-text uppercase tracking-wider">Enter Delivery Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Full Name *</label>
+                        <input type="text" id="cust-name" placeholder="Aapka Naam" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Phone Number *</label>
+                        <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Pin Code *</label>
+                        <input type="text" id="cust-pincode" placeholder="Area Pincode" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Address *</label>
+                        <input type="text" id="cust-address" placeholder="House No, Street, City" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="checkoutWhatsApp()" id="checkout-btn" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hidden hover:bg-green-700 transition shadow-lg text-center mt-6">Proceed to WhatsApp Order</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#d4af37]/30 text-center py-6 text-xs text-gray-500 mt-20">
+        &copy; 2026 KEZU & Co. All Rights Reserved. More Than A Fragrance. It's A Statement.
+    </footer>
+
+    <!-- Scripting for Category, Cart & WhatsApp Form -->
+    <script>
+        const WHATSAPP_NUMBER = "919335924662"; 
+        let cart = JSON.parse(localStorage.getItem('kezu_cart')) || [];
+
+        window.onload = function() {
+            updateCartUI();
+        };
+
+        function switchCategory(category) {
+            const womensSection = document.getElementById('womens-section');
+            const mensSection = document.getElementById('mens-section');
+            const couplesSection = document.getElementById('couples-section');
+            const aboutSection = document.getElementById('about-section');
+            
+            const tabWomens = document.getElementById('tab-womens');
+            const tabMens = document.getElementById('tab-mens');
+            const tabCouples = document.getElementById('tab-couples');
+            const tabAbout = document.getElementById('tab-about');
+
+            const mobWomens = document.getElementById('mob-tab-womens');
+            const mobMens = document.getElementById('mob-tab-mens');
+            const mobCouples = document.getElementById('mob-tab-couples');
+            const mobAbout = document.getElementById('mob-tab-about');
+
+            womensSection.classList.add('hidden');
+            mensSection.classList.add('hidden');
+            couplesSection.classList.add('hidden');
+            aboutSection.classList.add('hidden');
+
+            tabWomens.classList.remove('active', 'text-white');
+            tabWomens.classList.add('text-gray-400');
+            tabMens.classList.remove('active', 'text-white');
+            tabMens.classList.add('text-gray-400');
+            tabCouples.classList.remove('active', 'text-white');
+            tabCouples.classList.add('text-gray-400');
+            tabAbout.classList.remove('active', 'text-white');
+            tabAbout.classList.add('text-gray-400');
+
+            if (mobWomens) mobWomens.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
+            if (mobMens) mobMens.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
+            if (mobCouples) mobCouples.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
+            if (mobAbout) mobAbout.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
+
+            if (category === 'womens') {
+                womensSection.classList.remove('hidden');
+                tabWomens.classList.add('active', 'text-white');
+                if (mobWomens) mobWomens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+            } else if (category === 'mens') {
+                mensSection.classList.remove('hidden');
+                tabMens.classList.add('active', 'text-white');
+                if (mobMens) mobMens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+            } else if (category === 'couples') {
+                couplesSection.classList.remove('hidden');
+                tabCouples.classList.add('active', 'text-white');
+                if (mobCouples) mobCouples.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+            } else if (category === 'about') {
+                aboutSection.classList.remove('hidden');
+                tabAbout.classList.add('active', 'text-white');
+                if (mobAbout) mobAbout.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+            }
+        }
+
+        function updatePrice(id) {
+            const select = document.getElementById(`size-${id}`);
+            const price = select.options[select.selectedIndex].getAttribute('data-price');
+            document.getElementById(`price-display-${id}`).innerText = `₹${price}`;
+        }
+
+        function updateCouplePrice(id) {
+            const select = document.getElementById(`size-${id}`);
+            const womenPrice = parseInt(select.options[select.selectedIndex].getAttribute('data-women'));
+            const menPrice = parseInt(select.options[select.selectedIndex].getAttribute('data-men'));
+            const totalPrice = womenPrice + menPrice + 1; 
+            select.value = totalPrice; 
+            document.getElementById(`price-display-${id}`).innerText = `₹${totalPrice}`;
+        }
+
+        function addToCart(idKey, genderType) {
+            const nameElem = document.getElementById(`pname-${idKey}`);
+            const productName = nameElem ? nameElem.innerText.trim() : "Luxury Fragrance";
+
+            const imgElem = document.getElementById(`img-${idKey}`);
+            const imageUrl = imgElem ? imgElem.src : "";
+
+            const select = document.getElementById(`size-${idKey}`);
+            let sizeText = select.options[select.selectedIndex].text;
+            const price = parseInt(select.value);
+
+            let uniqueCartKey = idKey + "_" + price;
+
+            let existingItem = cart.find(item => item.cartKey === uniqueCartKey);
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ 
+                    cartKey: uniqueCartKey, 
+                    idKey: idKey, 
+                    name: productName, 
+                    gender: genderType, 
+                    size: sizeText, 
+                    price: price, 
+                    image: imageUrl, 
+                    qty: 1 
+                });
+            }
+            updateCartUI();
+        }
+
+        function changeQty(index, amount) {
+            cart[index].qty += amount;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            localStorage.setItem('kezu_cart', JSON.stringify(cart));
+
+            const cartContainer = document.getElementById('cart-items');
+            const cartSummary = document.getElementById('cart-summary');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const formContainer = document.getElementById('checkout-form-container');
+            
+            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-count').innerText = totalCount;
+
+            document.querySelectorAll("[id^='action-box-w-'], [id^='action-box-m-']").forEach(box => {
+                let key = box.id.replace('action-box-', '');
+                let gType = key.startsWith('w') ? 'Women' : 'Men';
+                box.innerHTML = `<button onclick="addToCart('${key}', '${gType}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>`;
+            });
+
+            document.querySelectorAll("[id^='action-box-c-']").forEach(box => {
+                let key = box.id.replace('action-box-', '');
+                box.innerHTML = `<button onclick="addToCart('${key}', 'Couples Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>`;
+            });
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<div class="text-center py-8 text-gray-500 italic">Your cart is currently empty. Add your favorite luxury fragrances!</div>';
+                cartSummary.classList.add('hidden');
+                checkoutBtn.classList.add('hidden');
+                formContainer.classList.add('hidden');
+                return;
+            }
+
+            let html = "";
+            let subtotal = 0;
+            let activeKeys = {};
+
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                activeKeys[item.idKey] = item;
+
+                html += `<div class="flex items-center justify-between mb-4 border-b border-gray-800 pb-4">
+                    <div class="flex items-center space-x-4">
+                        ${item.image ? `<img src="${item.image}" class="w-16 h-16 object-cover rounded border border-[#d4af37]/30">` : ''}
+                        <div>
+                            <span class="font-bold gold-text block text-base">${item.name}</span>
+                            <span class="text-xs text-gray-300 block">Size: ${item.size}</span>
+                            <span class="text-xs text-gray-400 mt-0.5 block font-semibold">${item.gender}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center border border-gray-700 rounded bg-black">
+                            <button onclick="changeQty(${index}, -1)" class="px-2.5 py-1 text-gray-400 hover:text-white font-bold">-</button>
+                            <span class="px-3 text-sm font-semibold gold-text">${item.qty}</span>
+                            <button onclick="changeQty(${index}, 1)" class="px-2.5 py-1 text-gray-400 hover:text-white font-bold">+</button>
+                        </div>
+                        <div class="text-right w-20">
+                            <span class="gold-text font-bold block text-sm">₹${itemTotal}</span>
+                            <span class="text-[10px] text-gray-500">₹${item.price} each</span>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-300 text-xs bg-red-950/60 border border-red-800 px-3 py-1.5 rounded transition font-medium">Remove</button>
+                    </div>
+                </div>`;
+            });
+
+            cartContainer.innerHTML = html;
+
+            for (let k in activeKeys) {
+                let cartItem = activeKeys[k];
+                let cartItemIdx = cart.findIndex(i => i.cartKey === cartItem.cartKey);
+                const actionBox = document.getElementById(`action-box-${k}`);
+                if (actionBox) {
+                    actionBox.innerHTML = `
+                    <div class="flex items-center justify-between border border-[#d4af37] bg-black rounded p-1">
+                        <span class="text-xs gold-text px-2 font-bold">Qty:</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeQty(${cartItemIdx}, -1)" class="px-2 py-0.5 text-gray-400 hover:text-white font-bold">-</button>
+                            <span class="text-sm font-semibold gold-text">${cartItem.qty}</span>
+                            <button onclick="changeQty(${cartItemIdx}, 1)" class="px-2 py-0.5 text-gray-400 hover:text-white font-bold">+</button>
+                        </div>
+                    </div>`;
+                }
+            }
+            
+            let hasCoupleSet = cart.some(item => item.gender === 'Couples Duo');
+            let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
+            let total = subtotal + deliveryFee;
+
+            document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
+            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
+            document.getElementById('cart-total').innerText = `₹${total}`;
+
+            cartSummary.classList.remove('hidden');
+            formContainer.classList.remove('hidden');
+            checkoutBtn.classList.remove('hidden');
+        }
+
+        function checkoutWhatsApp() {
+            let name = document.getElementById('cust-name').value.trim();
+            let phone = document.getElementById('cust-phone').value.trim();
+            let pincode = document.getElementById('cust-pincode').value.trim();
+            let address = document.getElementById('cust-address').value.trim();
+
+            if (!name || !phone || !pincode || !address) {
+                alert("Please fill in all your delivery details (Name, Phone, Pincode, Address) before proceeding with the order.");
+                return;
+            }
+
+            let message = `*New Order Placed - KEZU & Co.*\n\n`;
+            message += `👤 *Customer Details:*\n`;
+            message += `- Name: ${name}\n`;
+            message += `- Phone: ${phone}\n`;
+            message += `- Pincode: ${pincode}\n`;
+            message += `- Address: ${address}\n\n`;
+
+            message += `🛍️ *Order Summary:*\n`;
+            let subtotal = 0;
+            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            
+            cart.forEach(item => {
+                message += `- ${item.name} (${item.gender}) - ${item.size} x ${item.qty}: ₹${item.price * item.qty}\n`;
+                subtotal += item.price * item.qty;
+            });
+            let hasCoupleSet = cart.some(item => item.gender === 'Couples Duo');
+            let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
+            let total = subtotal + deliveryFee;
+
+            message += `\nSubtotal: ₹${subtotal}`;
+            message += `\nDelivery Charge: ${deliveryFee === 0 ? 'FREE' : '₹100'}`;
+            message += `\n*Total Amount: ₹${total}*`;
+
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
