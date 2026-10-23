@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 WSGI config for kezu_store project.
 
@@ -15,21 +14,3 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kezu_store.settings')
 
 application = get_wsgi_application()
-=======
-"""
-WSGI config for kezu_store project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.1/howto/deployment/wsgi/
-"""
-
-import os
-
-from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kezu_store.settings')
-
-application = get_wsgi_application()
->>>>>>> 6a8458910cb3cb570a94dc32e341098de414a463
