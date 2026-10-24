@@ -17,9 +17,10 @@
 </head>
 <body class="bg-black text-gray-100 min-h-screen flex flex-col justify-between">
 
-    <!-- Top Delivery Policy Announcement Bar -->
-    <div class="bg-[#d4af37] text-black text-center py-2 px-4 font-semibold text-sm tracking-wide">
-        🚚 Special Offer: ₹100 Delivery Charge for 1 Bottle | FREE Delivery on 2+ Bottles!
+    <!-- Top Delivery Policy & Gifting Announcement Bar with Bulk Inquiry Button -->
+    <div class="bg-[#d4af37] text-black py-2.5 px-4 font-semibold text-sm tracking-wide flex flex-col md:flex-row justify-center items-center text-center gap-2">
+        <span>🎁 Birthday gifts | Anniversary gifts | Return gifts bulk orders available! | 🚚 Special Offer: ₹100 Delivery Charge for 1 Bottle | FREE Delivery on 2+ Bottles!</span>
+        <button onclick="openBulkModal()" class="bg-black text-[#d4af37] px-3 py-1 rounded text-xs uppercase tracking-wider font-bold hover:bg-gray-900 transition shadow">Bulk Order Inquiry</button>
     </div>
 
     <!-- Header / Navbar -->
@@ -41,7 +42,7 @@
                 Men's Collection
             </button>
             <button id="tab-couples" onclick="switchCategory('couples')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
-                Couples Gift
+                KEZU Duo
             </button>
             <button id="tab-about" onclick="switchCategory('about')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
                 About Us
@@ -59,7 +60,7 @@
         <span class="text-gray-600">|</span>
         <button id="mob-tab-mens" onclick="switchCategory('mens')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Men's</button>
         <span class="text-gray-600">|</span>
-        <button id="mob-tab-couples" onclick="switchCategory('couples')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Couples Gift</button>
+        <button id="mob-tab-couples" onclick="switchCategory('couples')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">KEZU Duo</button>
         <span class="text-gray-600">|</span>
         <button id="mob-tab-about" onclick="switchCategory('about')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">About Us</button>
     </div>
@@ -81,11 +82,13 @@
                         <div>
                             <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
                                 {% if product.image %}
-                                    <img id="img-w-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                    <img id="img-w-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
                                 {% endif %}
                             </div>
-                            <h3 id="pname-w-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
-                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                            <h3 id="pname-w-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
+                                {% if product.name %}{{ product.name }}{% endif %}
+                            </h3>
+                            <p id="pdesc-w-{{ forloop.counter }}" class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line text-center md:text-left">{{ product.description }}</p>
                         </div>
                         <div>
                             <div class="mb-4">
@@ -96,7 +99,7 @@
                                     <option value="999" data-price="999" data-size="50ml">50ml - ₹999/-</option>
                                 </select>
                                 <div class="text-xl font-bold gold-text mt-2" id="price-display-w-{{ forloop.counter }}">₹299</div>
-                                <p class="text-xs text-[#d4af37] mt-1">• 1 Bottle: ₹100 Delivery Charge<br>• 2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
+                                <p class="text-xs text-[#d4af37] mt-1">1 Bottle: ₹100 Delivery Charge<br>2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
                             </div>
                             <div id="action-box-w-{{ forloop.counter }}">
                                 <button onclick="addToCart('w-{{ forloop.counter }}', 'Women')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
@@ -122,11 +125,13 @@
                         <div>
                             <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
                                 {% if product.image %}
-                                    <img id="img-m-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                    <img id="img-m-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
                                 {% endif %}
                             </div>
-                            <h3 id="pname-m-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
-                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                            <h3 id="pname-m-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
+                                {% if product.name %}{{ product.name }}{% endif %}
+                            </h3>
+                            <p id="pdesc-m-{{ forloop.counter }}" class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line text-center md:text-left">{{ product.description }}</p>
                         </div>
                         <div>
                             <div class="mb-4">
@@ -137,7 +142,7 @@
                                     <option value="1099" data-price="1099" data-size="50ml">50ml - ₹1099/-</option>
                                 </select>
                                 <div class="text-xl font-bold gold-text mt-2" id="price-display-m-{{ forloop.counter }}">₹399</div>
-                                <p class="text-xs text-[#d4af37] mt-1">• 1 Bottle: ₹100 Delivery Charge<br>• 2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
+                                <p class="text-xs text-[#d4af37] mt-1">1 Bottle: ₹100 Delivery Charge<br>2+ Bottles: <span class="text-green-400 font-bold">FREE Delivery</span></p>
                             </div>
                             <div id="action-box-m-{{ forloop.counter }}">
                                 <button onclick="addToCart('m-{{ forloop.counter }}', 'Men')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
@@ -163,11 +168,13 @@
                         <div>
                             <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
                                 {% if product.image %}
-                                    <img id="img-c-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                                    <img id="img-c-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
                                 {% endif %}
                             </div>
-                            <h3 id="pname-c-{{ forloop.counter }}" class="text-2xl font-semibold gold-text mb-2">{{ product.name }}</h3>
-                            <p class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line">{{ product.description }}</p>
+                            <h3 id="pname-c-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
+                                {% if product.name %}{{ product.name }}{% endif %}
+                            </h3>
+                            <p id="pdesc-c-{{ forloop.counter }}" class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line text-center md:text-left">{{ product.description }}</p>
                         </div>
                         <div>
                             <div class="mb-4">
@@ -181,7 +188,7 @@
                                 <p class="text-xs text-[#d4af37] mt-1"><span class="text-green-400 font-bold">FREE Delivery</span> on Couple Sets!</p>
                             </div>
                             <div id="action-box-c-{{ forloop.counter }}">
-                                <button onclick="addToCart('c-{{ forloop.counter }}', 'Couples Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>
+                                <button onclick="addToCart('c-{{ forloop.counter }}', 'KEZU Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>
                             </div>
                         </div>
                     </div>
@@ -251,13 +258,13 @@
                 <div class="flex justify-between font-bold text-xl gold-text pt-2 border-t border-gray-800"><span>Total Amount:</span> <span id="cart-total">₹0</span></div>
             </div>
 
-            <!-- Customer Details Form (Mandatory before WhatsApp Checkout) -->
+            <!-- Customer Details Form (Updated Placeholder to Your Name) -->
             <div id="checkout-form-container" class="hidden border-t border-[#d4af37]/30 pt-6 mt-6 space-y-4">
                 <h4 class="text-sm font-semibold gold-text uppercase tracking-wider">Enter Delivery Details</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Full Name *</label>
-                        <input type="text" id="cust-name" placeholder="Aapka Naam" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                        <input type="text" id="cust-name" placeholder="Your Name" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Phone Number *</label>
@@ -278,19 +285,122 @@
         </div>
     </main>
 
+    <!-- Bulk Order / Return Gift Modal Popup -->
+    <div id="bulk-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden backdrop-blur-sm p-4">
+        <div class="border border-[#d4af37]/60 rounded-xl bg-[#111] max-w-md w-full p-6 relative shadow-2xl">
+            <button onclick="closeBulkModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+            <h3 class="text-xl font-bold gold-text mb-2 uppercase tracking-wide">Bulk & Gifting Inquiry</h3>
+            <p class="text-xs text-gray-400 mb-6">For Birthdays, Anniversaries, Return Gifts & Corporate Orders.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Your Name *</label>
+                    <input type="text" id="bulk-name" placeholder="Your Name" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Phone Number *</label>
+                    <input type="tel" id="bulk-phone" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Your Message / Requirement *</label>
+                    <textarea id="bulk-msg" rows="3" placeholder="Mention occasion, estimated quantity, or gift requirements..." class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none"></textarea>
+                </div>
+                <button onclick="sendBulkWhatsApp()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition shadow-lg text-center">Send Inquiry on WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="border-t border-[#d4af37]/30 text-center py-6 text-xs text-gray-500 mt-20">
         &copy; 2026 KEZU & Co. All Rights Reserved. More Than A Fragrance. It's A Statement.
     </footer>
 
-    <!-- Scripting for Category, Cart & WhatsApp Form -->
+    <!-- Scripting for Filename Mapping & Bulk Order Modal -->
     <script>
         const WHATSAPP_NUMBER = "919335924662"; 
         let cart = JSON.parse(localStorage.getItem('kezu_cart')) || [];
 
         window.onload = function() {
+            assignNamesByFilename();
             updateCartUI();
         };
+
+        function openBulkModal() {
+            document.getElementById('bulk-modal').classList.remove('hidden');
+        }
+
+        function closeBulkModal() {
+            document.getElementById('bulk-modal').classList.add('hidden');
+        }
+
+        function sendBulkWhatsApp() {
+            let name = document.getElementById('bulk-name').value.trim();
+            let phone = document.getElementById('bulk-phone').value.trim();
+            let msg = document.getElementById('bulk-msg').value.trim();
+
+            if (!name || !phone || !msg) {
+                alert("Please fill in all details for bulk inquiry!");
+                return;
+            }
+
+            let message = `*Bulk / Gifting Inquiry - KEZU & Co.*\n\n`;
+            message += `👤 *Customer Details:*\n`;
+            message += `• Name: ${name}\n`;
+            message += `• Phone: ${phone}\n\n`;
+            message += `💬 *Requirement / Message:*\n${msg}`;
+
+            let encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+            closeBulkModal();
+        }
+
+        function assignNamesByFilename() {
+            document.querySelectorAll(".product-img").forEach(img => {
+                let filename = img.getAttribute('data-filename').toLowerCase();
+                let cardId = img.id.replace('img-', '');
+                let nameElem = document.getElementById(`pname-${cardId}`);
+                
+                if (!nameElem) return;
+
+                let assignedName = "";
+
+                if (filename.includes('charmer') && filename.includes('beautiful')) {
+                    assignedName = "CHARMER & BEAUTIFUL MESS";
+                } else if (filename.includes('queen') && filename.includes('alpha')) {
+                    assignedName = "QUEEN BEE & THE ALPHA";
+                } else if (filename.includes('rebel') && filename.includes('hustler')) {
+                    assignedName = "REBEL & HUSTLER";
+                } else if (filename.includes('stoic') && filename.includes('bold')) {
+                    assignedName = "STOIC & BOLD";
+                } else if (filename.includes('icon') && (filename.includes('dramatic') || filename.includes('drama'))) {
+                    assignedName = "ICON & DRAMATIC";
+                } else if (filename.includes('dramatic')) {
+                    assignedName = "DRAMATIC";
+                } else if (filename.includes('queen')) {
+                    assignedName = "QUEEN BEE";
+                } else if (filename.includes('beautiful')) {
+                    assignedName = "BEAUTIFUL MESS";
+                } else if (filename.includes('bold')) {
+                    assignedName = "BOLD";
+                } else if (filename.includes('hustler')) {
+                    assignedName = "HUSTLER";
+                } else if (filename.includes('charmer')) {
+                    assignedName = "CHARMER";
+                } else if (filename.includes('alpha')) {
+                    assignedName = "THE ALPHA";
+                } else if (filename.includes('stoic')) {
+                    assignedName = "STOIC";
+                } else if (filename.includes('icon')) {
+                    assignedName = "ICON";
+                } else if (filename.includes('rebel')) {
+                    assignedName = "REBEL";
+                } else {
+                    assignedName = nameElem.innerText.trim() || "KEZU FRAGRANCE";
+                }
+
+                nameElem.innerText = assignedName;
+            });
+        }
 
         function switchCategory(category) {
             const womensSection = document.getElementById('womens-section');
@@ -363,7 +473,7 @@
 
         function addToCart(idKey, genderType) {
             const nameElem = document.getElementById(`pname-${idKey}`);
-            const productName = nameElem ? nameElem.innerText.trim() : "Luxury Fragrance";
+            let productName = nameElem ? nameElem.innerText.trim() : "Luxury Fragrance";
 
             const imgElem = document.getElementById(`img-${idKey}`);
             const imageUrl = imgElem ? imgElem.src : "";
@@ -424,7 +534,7 @@
 
             document.querySelectorAll("[id^='action-box-c-']").forEach(box => {
                 let key = box.id.replace('action-box-', '');
-                box.innerHTML = `<button onclick="addToCart('${key}', 'Couples Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>`;
+                box.innerHTML = `<button onclick="addToCart('${key}', 'KEZU Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>`;
             });
 
             if (cart.length === 0) {
@@ -487,7 +597,7 @@
                 }
             }
             
-            let hasCoupleSet = cart.some(item => item.gender === 'Couples Duo');
+            let hasCoupleSet = cart.some(item => item.gender === 'KEZU Duo');
             let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
             let total = subtotal + deliveryFee;
 
@@ -507,35 +617,34 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all your delivery details (Name, Phone, Pincode, Address) before proceeding with the order.");
+                alert("Please fill in all delivery details before proceeding to WhatsApp!");
                 return;
             }
 
             let message = `*New Order Placed - KEZU & Co.*\n\n`;
             message += `👤 *Customer Details:*\n`;
-            message += `- Name: ${name}\n`;
-            message += `- Phone: ${phone}\n`;
-            message += `- Pincode: ${pincode}\n`;
-            message += `- Address: ${address}\n\n`;
-
+            message += `• Name: ${name}\n`;
+            message += `• Phone: ${phone}\n`;
+            message += `• Pincode: ${pincode}\n`;
+            message += `• Address: ${address}\n\n`;
             message += `🛍️ *Order Summary:*\n`;
-            let subtotal = 0;
-            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            
-            cart.forEach(item => {
-                message += `- ${item.name} (${item.gender}) - ${item.size} x ${item.qty}: ₹${item.price * item.qty}\n`;
-                subtotal += item.price * item.qty;
+
+            cart.forEach((item) => {
+                message += `• *${item.name}* (${item.gender}) - ${item.size} - ₹${item.price}/- x ${item.qty}: ₹${item.price * item.qty}\n`;
             });
-            let hasCoupleSet = cart.some(item => item.gender === 'Couples Duo');
+
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            let hasCoupleSet = cart.some(item => item.gender === 'KEZU Duo');
             let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
             let total = subtotal + deliveryFee;
 
-            message += `\nSubtotal: ₹${subtotal}`;
-            message += `\nDelivery Charge: ${deliveryFee === 0 ? 'FREE' : '₹100'}`;
-            message += `\n*Total Amount: ₹${total}*`;
+            message += `\n*Subtotal:* ₹${subtotal}\n`;
+            message += `*Delivery Charge:* ${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}\n`;
+            message += `*Total Amount:* ₹${total}\n`;
 
-            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-            window.open(url, '_blank');
+            let encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
         }
     </script>
 </body>
