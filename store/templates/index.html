@@ -4,7 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KEZU & Co. | Luxury Fragrances</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>KEZU & Co. | Luxury Fragrances & Long Lasting Perfumes</title>
+    <meta name="description" content="Discover KEZU & Co. - Exquisite, long-lasting luxury fragrances, men's colognes, women's perfumes, and romantic couple gift sets. Handcrafted in small batches.">
+    <meta name="keywords" content="KEZU and Co, kezuandco, luxury fragrances, perfumes online India, long lasting perfumes, couple gift sets, Queeny Yalangi">
+    <meta name="author" content="KEZU & Co.">
+    <link rel="canonical" href="https://kezuandco.com/">
+
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kezuandco.com/">
+    <meta property="og:title" content="KEZU & Co. | Luxury Fragrances">
+    <meta property="og:description" content="Exquisite, long-lasting luxury fragrances and artisanal perfumes. Shop women's, men's, and couple collections.">
+    <meta property="og:image" content="https://kezuandco.com/{% static 'logo.png' %}">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -513,7 +527,7 @@
             let grandTotal = subtotal + deliveryFee;
 
             document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
-            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            document.getElementById('cart-delivery').innerText = `₹${deliveryFee}`;
             document.getElementById('cart-total').innerText = `₹${grandTotal}`;
 
             cartSummary.classList.remove('hidden');
@@ -528,7 +542,7 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all delivery details before proceeding!");
+                alert("Please fill in all delivery details before proceeding to WhatsApp!");
                 return;
             }
 
@@ -537,24 +551,23 @@
             let deliveryFee = totalCount >= 2 ? 0 : 100;
             let grandTotal = subtotal + deliveryFee;
 
-            let message = `*New Order - KEZU & Co.*\n\n`;
-            message += `👤 *Customer Details:*\n`;
-            message += `• Name: ${name}\n`;
-            message += `• Phone: ${phone}\n`;
-            message += `• Pincode: ${pincode}\n`;
-            message += `• Address: ${address}\n\n`;
+            let message = `🛍️ *New Order - KEZU & Co.*\n\n`;
+            message += `👤 *Customer Name:* ${name}\n`;
+            message += `📞 *Phone:* ${phone}\n`;
+            message += `📍 *Address:* ${address} - Pincode: ${pincode}\n\n`;
+            message += `📦 *Order Items:*\n`;
 
-            message += `🛍️ *Order Items:*\n`;
             cart.forEach((item, index) => {
-                message += `${index + 1}. ${item.name} (${item.size}) - Qty: ${item.qty} - ₹${item.price * item.qty}\n`;
+                message += `${index + 1}. ${item.name} (${item.size}) x ${item.qty} = ₹${item.price * item.qty}\n`;
             });
 
-            message += `\n📦 *Subtotal:* ₹${subtotal}\n`;
-            message += `🚚 *Delivery Fee:* ${deliveryFee === 0 ? 'FREE' : '₹100'}\n`;
-            message += `💰 *Total Amount:* ₹${grandTotal}\n`;
+            message += `\nSubtotal: ₹${subtotal}`;
+            message += `\nDelivery Fee: ₹${deliveryFee}`;
+            message += `\n*Total Amount: ₹${grandTotal}*`;
 
             let encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+            let whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
         }
     </script>
 </body>
