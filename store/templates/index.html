@@ -17,10 +17,9 @@
 </head>
 <body class="bg-black text-gray-100 min-h-screen flex flex-col justify-between">
 
-    <!-- Top Delivery Policy & Gifting Announcement Bar with Bulk Inquiry Button -->
-    <div class="bg-[#d4af37] text-black py-2.5 px-4 font-semibold text-sm tracking-wide flex flex-col md:flex-row justify-center items-center text-center gap-2">
-        <span>🎁 Birthday gifts | Anniversary gifts | Return gifts bulk orders available! | 🚚 Special Offer: ₹100 Delivery Charge for 1 Bottle | FREE Delivery on 2+ Bottles!</span>
-        <button onclick="openBulkModal()" class="bg-black text-[#d4af37] px-3 py-1 rounded text-xs uppercase tracking-wider font-bold hover:bg-gray-900 transition shadow">Bulk Order Inquiry</button>
+    <!-- Top Gifting Announcement Bar (Delivery text & button removed) -->
+    <div class="bg-[#d4af37] text-black py-2.5 px-4 font-semibold text-sm tracking-wide flex justify-center items-center text-center">
+        <span>🎁 Birthday gifts | Anniversary gifts | Return gifts bulk orders available!</span>
     </div>
 
     <!-- Header / Navbar -->
@@ -258,7 +257,7 @@
                 <div class="flex justify-between font-bold text-xl gold-text pt-2 border-t border-gray-800"><span>Total Amount:</span> <span id="cart-total">₹0</span></div>
             </div>
 
-            <!-- Customer Details Form (Updated Placeholder to Your Name) -->
+            <!-- Customer Details Form -->
             <div id="checkout-form-container" class="hidden border-t border-[#d4af37]/30 pt-6 mt-6 space-y-4">
                 <h4 class="text-sm font-semibold gold-text uppercase tracking-wider">Enter Delivery Details</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -285,37 +284,12 @@
         </div>
     </main>
 
-    <!-- Bulk Order / Return Gift Modal Popup -->
-    <div id="bulk-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden backdrop-blur-sm p-4">
-        <div class="border border-[#d4af37]/60 rounded-xl bg-[#111] max-w-md w-full p-6 relative shadow-2xl">
-            <button onclick="closeBulkModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold">&times;</button>
-            <h3 class="text-xl font-bold gold-text mb-2 uppercase tracking-wide">Bulk & Gifting Inquiry</h3>
-            <p class="text-xs text-gray-400 mb-6">For Birthdays, Anniversaries, Return Gifts & Corporate Orders.</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Your Name *</label>
-                    <input type="text" id="bulk-name" placeholder="Your Name" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Phone Number *</label>
-                    <input type="tel" id="bulk-phone" placeholder="Mobile Number" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Your Message / Requirement *</label>
-                    <textarea id="bulk-msg" rows="3" placeholder="Mention occasion, estimated quantity, or gift requirements..." class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none"></textarea>
-                </div>
-                <button onclick="sendBulkWhatsApp()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition shadow-lg text-center">Send Inquiry on WhatsApp</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="border-t border-[#d4af37]/30 text-center py-6 text-xs text-gray-500 mt-20">
         &copy; 2026 KEZU & Co. All Rights Reserved. More Than A Fragrance. It's A Statement.
     </footer>
 
-    <!-- Scripting for Filename Mapping & Bulk Order Modal -->
+    <!-- Scripting for Filename Mapping & Cart Logic -->
     <script>
         const WHATSAPP_NUMBER = "919335924662"; 
         let cart = JSON.parse(localStorage.getItem('kezu_cart')) || [];
@@ -324,35 +298,6 @@
             assignNamesByFilename();
             updateCartUI();
         };
-
-        function openBulkModal() {
-            document.getElementById('bulk-modal').classList.remove('hidden');
-        }
-
-        function closeBulkModal() {
-            document.getElementById('bulk-modal').classList.add('hidden');
-        }
-
-        function sendBulkWhatsApp() {
-            let name = document.getElementById('bulk-name').value.trim();
-            let phone = document.getElementById('bulk-phone').value.trim();
-            let msg = document.getElementById('bulk-msg').value.trim();
-
-            if (!name || !phone || !msg) {
-                alert("Please fill in all details for bulk inquiry!");
-                return;
-            }
-
-            let message = `*Bulk / Gifting Inquiry - KEZU & Co.*\n\n`;
-            message += `👤 *Customer Details:*\n`;
-            message += `• Name: ${name}\n`;
-            message += `• Phone: ${phone}\n\n`;
-            message += `💬 *Requirement / Message:*\n${msg}`;
-
-            let encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
-            closeBulkModal();
-        }
 
         function assignNamesByFilename() {
             document.querySelectorAll(".product-img").forEach(img => {
@@ -492,121 +437,87 @@
                     cartKey: uniqueCartKey, 
                     idKey: idKey, 
                     name: productName, 
-                    gender: genderType, 
                     size: sizeText, 
                     price: price, 
-                    image: imageUrl, 
-                    qty: 1 
+                    qty: 1, 
+                    type: genderType, 
+                    image: imageUrl 
                 });
             }
-            updateCartUI();
+            saveAndRefreshCart();
+            alert(productName + " added to cart!");
         }
 
-        function changeQty(index, amount) {
-            cart[index].qty += amount;
-            if (cart[index].qty <= 0) {
-                cart.splice(index, 1);
+        function changeQty(cartKey, delta) {
+            let item = cart.find(i => i.cartKey === cartKey);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.cartKey !== cartKey);
+                }
             }
-            updateCartUI();
+            saveAndRefreshCart();
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
+        function saveAndRefreshCart() {
+            localStorage.setItem('kezu_cart', JSON.stringify(cart));
             updateCartUI();
         }
 
         function updateCartUI() {
-            localStorage.setItem('kezu_cart', JSON.stringify(cart));
+            let cartItemsContainer = document.getElementById('cart-items');
+            let cartSummary = document.getElementById('cart-summary');
+            let checkoutFormContainer = document.getElementById('checkout-form-container');
+            let checkoutBtn = document.getElementById('checkout-btn');
+            let cartCount = document.getElementById('cart-count');
 
-            const cartContainer = document.getElementById('cart-items');
-            const cartSummary = document.getElementById('cart-summary');
-            const checkoutBtn = document.getElementById('checkout-btn');
-            const formContainer = document.getElementById('checkout-form-container');
-            
             let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            document.getElementById('cart-count').innerText = totalCount;
-
-            document.querySelectorAll("[id^='action-box-w-'], [id^='action-box-m-']").forEach(box => {
-                let key = box.id.replace('action-box-', '');
-                let gType = key.startsWith('w') ? 'Women' : 'Men';
-                box.innerHTML = `<button onclick="addToCart('${key}', '${gType}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>`;
-            });
-
-            document.querySelectorAll("[id^='action-box-c-']").forEach(box => {
-                let key = box.id.replace('action-box-', '');
-                box.innerHTML = `<button onclick="addToCart('${key}', 'KEZU Duo')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add Duo to Cart</button>`;
-            });
+            cartCount.innerText = totalCount;
 
             if (cart.length === 0) {
-                cartContainer.innerHTML = '<div class="text-center py-8 text-gray-500 italic">Your cart is currently empty. Add your favorite luxury fragrances!</div>';
+                cartItemsContainer.innerHTML = "Your cart is empty.";
                 cartSummary.classList.add('hidden');
+                checkoutFormContainer.classList.add('hidden');
                 checkoutBtn.classList.add('hidden');
-                formContainer.classList.add('hidden');
                 return;
             }
 
-            let html = "";
+            let html = '<div class="space-y-4">';
             let subtotal = 0;
-            let activeKeys = {};
 
-            cart.forEach((item, index) => {
+            cart.forEach(item => {
                 let itemTotal = item.price * item.qty;
                 subtotal += itemTotal;
-                activeKeys[item.idKey] = item;
-
-                html += `<div class="flex items-center justify-between mb-4 border-b border-gray-800 pb-4">
-                    <div class="flex items-center space-x-4">
-                        ${item.image ? `<img src="${item.image}" class="w-16 h-16 object-cover rounded border border-[#d4af37]/30">` : ''}
-                        <div>
-                            <span class="font-bold gold-text block text-base">${item.name}</span>
-                            <span class="text-xs text-gray-300 block">Size: ${item.size}</span>
-                            <span class="text-xs text-gray-400 mt-0.5 block font-semibold">${item.gender}</span>
+                html += `
+                    <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                        <div class="flex items-center space-x-3">
+                            ${item.image ? `<img src="${item.image}" class="w-12 h-12 object-cover rounded border border-[#d4af37]/30">` : ''}
+                            <div>
+                                <h4 class="font-bold text-white">${item.name}</h4>
+                                <p class="text-xs text-gray-400">Size: ${item.size} | Price: ₹${item.price}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="changeQty('${item.cartKey}', -1)" class="bg-gray-800 px-2 py-1 rounded text-white hover:bg-gray-700">-</button>
+                            <span class="font-bold">${item.qty}</span>
+                            <button onclick="changeQty('${item.cartKey}', 1)" class="bg-gray-800 px-2 py-1 rounded text-white hover:bg-gray-700">+</button>
+                            <span class="font-bold gold-text ml-2">₹${itemTotal}</span>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center border border-gray-700 rounded bg-black">
-                            <button onclick="changeQty(${index}, -1)" class="px-2.5 py-1 text-gray-400 hover:text-white font-bold">-</button>
-                            <span class="px-3 text-sm font-semibold gold-text">${item.qty}</span>
-                            <button onclick="changeQty(${index}, 1)" class="px-2.5 py-1 text-gray-400 hover:text-white font-bold">+</button>
-                        </div>
-                        <div class="text-right w-20">
-                            <span class="gold-text font-bold block text-sm">₹${itemTotal}</span>
-                            <span class="text-[10px] text-gray-500">₹${item.price} each</span>
-                        </div>
-                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-300 text-xs bg-red-950/60 border border-red-800 px-3 py-1.5 rounded transition font-medium">Remove</button>
-                    </div>
-                </div>`;
+                `;
             });
+            html += '</div>';
+            cartItemsContainer.innerHTML = html;
 
-            cartContainer.innerHTML = html;
-
-            for (let k in activeKeys) {
-                let cartItem = activeKeys[k];
-                let cartItemIdx = cart.findIndex(i => i.cartKey === cartItem.cartKey);
-                const actionBox = document.getElementById(`action-box-${k}`);
-                if (actionBox) {
-                    actionBox.innerHTML = `
-                    <div class="flex items-center justify-between border border-[#d4af37] bg-black rounded p-1">
-                        <span class="text-xs gold-text px-2 font-bold">Qty:</span>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${cartItemIdx}, -1)" class="px-2 py-0.5 text-gray-400 hover:text-white font-bold">-</button>
-                            <span class="text-sm font-semibold gold-text">${cartItem.qty}</span>
-                            <button onclick="changeQty(${cartItemIdx}, 1)" class="px-2 py-0.5 text-gray-400 hover:text-white font-bold">+</button>
-                        </div>
-                    </div>`;
-                }
-            }
-            
-            let hasCoupleSet = cart.some(item => item.gender === 'KEZU Duo');
-            let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
-            let total = subtotal + deliveryFee;
+            let deliveryFee = totalCount >= 2 ? 0 : 100;
+            let grandTotal = subtotal + deliveryFee;
 
             document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
-            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
-            document.getElementById('cart-total').innerText = `₹${total}`;
+            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            document.getElementById('cart-total').innerText = `₹${grandTotal}`;
 
             cartSummary.classList.remove('hidden');
-            formContainer.classList.remove('hidden');
+            checkoutFormContainer.classList.remove('hidden');
             checkoutBtn.classList.remove('hidden');
         }
 
@@ -617,31 +528,30 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all delivery details before proceeding to WhatsApp!");
+                alert("Please fill in all delivery details before proceeding!");
                 return;
             }
 
-            let message = `*New Order Placed - KEZU & Co.*\n\n`;
+            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let deliveryFee = totalCount >= 2 ? 0 : 100;
+            let grandTotal = subtotal + deliveryFee;
+
+            let message = `*New Order - KEZU & Co.*\n\n`;
             message += `👤 *Customer Details:*\n`;
             message += `• Name: ${name}\n`;
             message += `• Phone: ${phone}\n`;
             message += `• Pincode: ${pincode}\n`;
             message += `• Address: ${address}\n\n`;
-            message += `🛍️ *Order Summary:*\n`;
 
-            cart.forEach((item) => {
-                message += `• *${item.name}* (${item.gender}) - ${item.size} - ₹${item.price}/- x ${item.qty}: ₹${item.price * item.qty}\n`;
+            message += `🛍️ *Order Items:*\n`;
+            cart.forEach((item, index) => {
+                message += `${index + 1}. ${item.name} (${item.size}) - Qty: ${item.qty} - ₹${item.price * item.qty}\n`;
             });
 
-            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            let hasCoupleSet = cart.some(item => item.gender === 'KEZU Duo');
-            let deliveryFee = (totalCount === 1 && !hasCoupleSet) ? 100 : 0;
-            let total = subtotal + deliveryFee;
-
-            message += `\n*Subtotal:* ₹${subtotal}\n`;
-            message += `*Delivery Charge:* ${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}\n`;
-            message += `*Total Amount:* ₹${total}\n`;
+            message += `\n📦 *Subtotal:* ₹${subtotal}\n`;
+            message += `🚚 *Delivery Fee:* ${deliveryFee === 0 ? 'FREE' : '₹100'}\n`;
+            message += `💰 *Total Amount:* ₹${grandTotal}\n`;
 
             let encodedMessage = encodeURIComponent(message);
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
