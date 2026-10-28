@@ -512,27 +512,28 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <button onclick="changeQty('${item.cartKey}', -1)" class="bg-gray-800 px-2 py-1 rounded text-white hover:bg-gray-700">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeQty('${item.cartKey}', 1)" class="bg-gray-800 px-2 py-1 rounded text-white hover:bg-gray-700">+</button>
-                            <span class="font-bold gold-text ml-2">₹${itemTotal}</span>
+                            <button onclick="changeQty('${item.cartKey}', -1)" class="px-2 bg-gray-800 text-white rounded">-</button>
+                            <span>${item.qty}</span>
+                            <button onclick="changeQty('${item.cartKey}', 1)" class="px-2 bg-gray-800 text-white rounded">+</button>
+                            <span class="font-bold text-amber-400">₹${itemTotal}</span>
                         </div>
                     </div>
                 `;
             });
+
             html += '</div>';
             cartItemsContainer.innerHTML = html;
-
-            let deliveryFee = totalCount >= 2 ? 0 : 100;
-            let grandTotal = subtotal + deliveryFee;
-
-            document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
-            document.getElementById('cart-delivery').innerText = `₹${deliveryFee}`;
-            document.getElementById('cart-total').innerText = `₹${grandTotal}`;
-
             cartSummary.classList.remove('hidden');
             checkoutFormContainer.classList.remove('hidden');
             checkoutBtn.classList.remove('hidden');
+
+            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
+            let deliveryFee = (totalBottles >= 2) ? 0 : 100;
+            let grandTotal = subtotal + deliveryFee;
+
+            document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
+            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            document.getElementById('cart-total').innerText = `₹${grandTotal}`;
         }
 
         function checkoutWhatsApp() {
@@ -542,32 +543,29 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all delivery details before proceeding to WhatsApp!");
+                alert("Please fill in all delivery details before proceeding.");
                 return;
             }
 
-            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let deliveryFee = totalCount >= 2 ? 0 : 100;
-            let grandTotal = subtotal + deliveryFee;
+            let message = `🛍️ *New Order - KEZU & Co.*\n\n*Customer Details:*\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Pincode: ${pincode}\n🏠 Address: ${address}\n\n*Order Summary:*\n`;
 
-            let message = `🛍️ *New Order - KEZU & Co.*\n\n`;
-            message += `👤 *Customer Name:* ${name}\n`;
-            message += `📞 *Phone:* ${phone}\n`;
-            message += `📍 *Address:* ${address} - Pincode: ${pincode}\n\n`;
-            message += `📦 *Order Items:*\n`;
-
-            cart.forEach((item, index) => {
-                message += `${index + 1}. ${item.name} (${item.size}) x ${item.qty} = ₹${item.price * item.qty}\n`;
+            let subtotal = 0;
+            cart.forEach(item => {
+                let itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                message += `- ${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
             });
 
+            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
+            let deliveryFee = (totalBottles >= 2) ? 0 : 100;
+            let grandTotal = subtotal + deliveryFee;
+
             message += `\nSubtotal: ₹${subtotal}`;
-            message += `\nDelivery Fee: ₹${deliveryFee}`;
+            message += `\nDelivery: ${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}`;
             message += `\n*Total Amount: ₹${grandTotal}*`;
 
             let encodedMessage = encodeURIComponent(message);
-            let whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-            window.open(whatsappUrl, '_blank');
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
         }
     </script>
 </body>
