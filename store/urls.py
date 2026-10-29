@@ -13,11 +13,8 @@ class StaticViewSitemap(Sitemap):
     def location(self, item):
         return '/'
 
-sitemaps = {
-    'static': StaticViewSitemap,
-}
-
 urlpatterns = [
     path('', views.index, name='index'),
-    #path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('health/', views.health_check, name='health_check'),
+    path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticViewSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
 ]

@@ -12,12 +12,15 @@
     <meta name="author" content="KEZU & Co.">
     <link rel="canonical" href="https://kezuandco.com/">
 
+    <!-- Browser Tab Favicon Using Data URI Butterfly to avoid black box issue -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦋</text></svg>">
+
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kezuandco.com/">
-    <meta property="og:title" content="KEZU & Co. | Luxury Fragrances">
-    <meta property="og:description" content="Exquisite, long-lasting luxury fragrances and artisanal perfumes. Shop women's, men's, and couple collections.">
-    <meta property="og:image" content="https://kezuandco.com/{% static 'logo.png' %}">
+    <meta property="og:title" content="KEZU & Co. | Luxury Fragrances & Long Lasting Perfumes">
+    <meta property="og:description" content="Discover KEZU & Co. - Exquisite, long-lasting luxury fragrances, men's colognes, women's perfumes, and romantic couple gift sets. Handcrafted in small batches.">
+    <meta property="og:image" content="https://kezuandco.com/{% static 'logo.jpeg' %}">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,11 +41,11 @@
 
     <!-- Header / Navbar -->
     <header class="border-b border-[#d4af37]/30 py-4 px-6 flex justify-between items-center bg-black/90 sticky top-0 z-50 backdrop-blur-md">
-        <!-- Logo Image / Brand Name -->
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchCategory('womens')">
-            <img src="{% static 'logo.png' %}" alt="KEZU & Co." class="h-10 w-auto object-contain onerror-hide" onerror="this.style.display='none'">
-            <h1 class="text-2xl font-bold tracking-widest gold-text flex items-center">
-                KEZU & CO. <span class="text-xs text-[#d4af37] ml-1">🦋</span>
+        <!-- Crystal Clear Text Logo -->
+        <div class="flex items-center space-x-2 cursor-pointer ml-2" onclick="switchCategory('womens')">
+            <h1 class="text-3xl font-bold tracking-widest gold-text flex items-center space-x-2">
+                <span>KEZU & CO.</span>
+                <span class="text-xl text-[#d4af37] ml-1">🦋</span>
             </h1>
         </div>
         
@@ -311,6 +314,7 @@
         window.onload = function() {
             assignNamesByFilename();
             updateCartUI();
+            updateAllActionBoxes();
         };
 
         function assignNamesByFilename() {
@@ -419,6 +423,7 @@
             const select = document.getElementById(`size-${id}`);
             const price = select.options[select.selectedIndex].getAttribute('data-price');
             document.getElementById(`price-display-${id}`).innerText = `₹${price}`;
+            updateActionBox(id);
         }
 
         function updateCouplePrice(id) {
@@ -428,6 +433,7 @@
             const totalPrice = womenPrice + menPrice + 1; 
             select.value = totalPrice; 
             document.getElementById(`price-display-${id}`).innerText = `₹${totalPrice}`;
+            updateActionBox(id);
         }
 
         function addToCart(idKey, genderType) {
@@ -459,7 +465,6 @@
                 });
             }
             saveAndRefreshCart();
-            alert(productName + " added to cart!");
         }
 
         function changeQty(cartKey, delta) {
@@ -473,9 +478,60 @@
             saveAndRefreshCart();
         }
 
+        function changeCardQty(idKey, delta) {
+            const select = document.getElementById(`size-${idKey}`);
+            const price = parseInt(select.value);
+            let uniqueCartKey = idKey + "_" + price;
+
+            let item = cart.find(i => i.cartKey === uniqueCartKey);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.cartKey !== uniqueCartKey);
+                }
+            }
+            saveAndRefreshCart();
+        }
+
         function saveAndRefreshCart() {
             localStorage.setItem('kezu_cart', JSON.stringify(cart));
             updateCartUI();
+            updateAllActionBoxes();
+        }
+
+        function updateAllActionBoxes() {
+            document.querySelectorAll("[id^='action-box-']").forEach(box => {
+                let idKey = box.id.replace('action-box-', '');
+                updateActionBox(idKey);
+            });
+        }
+
+        function updateActionBox(idKey) {
+            let actionBox = document.getElementById(`action-box-${idKey}`);
+            if (!actionBox) return;
+
+            const select = document.getElementById(`size-${idKey}`);
+            if (!select) return;
+            const price = parseInt(select.value);
+            let uniqueCartKey = idKey + "_" + price;
+
+            let item = cart.find(i => i.cartKey === uniqueCartKey);
+            let genderType = idKey.startsWith('w-') ? 'Women' : (idKey.startsWith('m-') ? 'Men' : 'KEZU Duo');
+
+            if (item && item.qty > 0) {
+                actionBox.innerHTML = `
+                    <div class="flex items-center justify-between border border-[#d4af37] rounded bg-black p-1">
+                        <button onclick="changeCardQty('${idKey}', -1)" class="px-3 py-1 bg-black text-[#d4af37] font-bold rounded hover:bg-[#d4af37] hover:text-black transition">-</button>
+                        <span class="text-white font-bold text-base">${item.qty}</span>
+                        <button onclick="changeCardQty('${idKey}', 1)" class="px-3 py-1 bg-black text-[#d4af37] font-bold rounded hover:bg-[#d4af37] hover:text-black transition">+</button>
+                    </div>
+                `;
+            } else {
+                let btnText = genderType === 'KEZU Duo' ? 'Add Duo to Cart' : 'Add to Cart';
+                actionBox.innerHTML = `
+                    <button onclick="addToCart('${idKey}', '${genderType}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">${btnText}</button>
+                `;
+            }
         }
 
         function updateCartUI() {
@@ -512,10 +568,12 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <button onclick="changeQty('${item.cartKey}', -1)" class="px-2 bg-gray-800 text-white rounded">-</button>
-                            <span>${item.qty}</span>
-                            <button onclick="changeQty('${item.cartKey}', 1)" class="px-2 bg-gray-800 text-white rounded">+</button>
-                            <span class="font-bold text-amber-400">₹${itemTotal}</span>
+                            <div class="flex items-center border border-gray-700 rounded bg-black">
+                                <button onclick="changeQty('${item.cartKey}', -1)" class="px-2.5 py-1 text-gray-300 hover:text-white">-</button>
+                                <span class="px-2 text-sm font-semibold text-white">${item.qty}</span>
+                                <button onclick="changeQty('${item.cartKey}', 1)" class="px-2.5 py-1 text-gray-300 hover:text-white">+</button>
+                            </div>
+                            <span class="font-bold gold-text">₹${itemTotal}</span>
                         </div>
                     </div>
                 `;
@@ -523,17 +581,21 @@
 
             html += '</div>';
             cartItemsContainer.innerHTML = html;
-            cartSummary.classList.remove('hidden');
-            checkoutFormContainer.classList.remove('hidden');
-            checkoutBtn.classList.remove('hidden');
 
-            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-            let deliveryFee = (totalBottles >= 2) ? 0 : 100;
+            let deliveryFee = (subtotal >= 598 || totalCount >= 2) ? 0 : 100;
+            if (cart.some(item => item.type === 'KEZU Duo')) {
+                deliveryFee = 0;
+            }
+
             let grandTotal = subtotal + deliveryFee;
 
             document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
-            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
             document.getElementById('cart-total').innerText = `₹${grandTotal}`;
+
+            cartSummary.classList.remove('hidden');
+            checkoutFormContainer.classList.remove('hidden');
+            checkoutBtn.classList.remove('hidden');
         }
 
         function checkoutWhatsApp() {
@@ -543,26 +605,29 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all delivery details before proceeding.");
+                alert("Please fill in all delivery details before placing your order.");
                 return;
             }
 
-            let message = `🛍️ *New Order - KEZU & Co.*\n\n*Customer Details:*\n👤 Name: ${name}\n📞 Phone: ${phone}\n📍 Pincode: ${pincode}\n🏠 Address: ${address}\n\n*Order Summary:*\n`;
+            let message = `*New Order Placed - KEZU & Co.*\n\n*Customer Details:*\n- Name: ${name}\n- Phone: ${phone}\n- Pincode: ${pincode}\n- Address: ${address}\n\n*Order Items:*\n`;
 
             let subtotal = 0;
+            let totalCount = 0;
             cart.forEach(item => {
                 let itemTotal = item.price * item.qty;
                 subtotal += itemTotal;
+                totalCount += item.qty;
                 message += `- ${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
             });
 
-            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-            let deliveryFee = (totalBottles >= 2) ? 0 : 100;
+            let deliveryFee = (subtotal >= 598 || totalCount >= 2) ? 0 : 100;
+            if (cart.some(item => item.type === 'KEZU Duo')) {
+                deliveryFee = 0;
+            }
+
             let grandTotal = subtotal + deliveryFee;
 
-            message += `\nSubtotal: ₹${subtotal}`;
-            message += `\nDelivery: ${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}`;
-            message += `\n*Total Amount: ₹${grandTotal}*`;
+            message += `\n*Subtotal:* ₹${subtotal}\n*Delivery:* ${deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee}\n*Total Amount:* ₹${grandTotal}`;
 
             let encodedMessage = encodeURIComponent(message);
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
