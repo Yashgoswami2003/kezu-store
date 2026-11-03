@@ -39,13 +39,18 @@
 </head>
 <body class="bg-black text-gray-100 min-h-screen flex flex-col justify-between">
 
+    <!-- Diwali Special Offer Banner -->
+    <div class="bg-amber-600 text-white text-center py-2.5 px-4 text-xs sm:text-sm font-bold tracking-wide shadow-md sticky top-0 z-50">
+        🎉 Diwali Special Offer: Use Code <span class="bg-black/30 px-2 py-0.5 rounded text-yellow-300 font-extrabold">DIWALI26</span> to get 15% OFF on your order! ✨
+    </div>
+
     <!-- Top Announcement Bar -->
     <div class="bg-[#d4af37] text-black py-2.5 px-4 font-semibold text-sm tracking-wide flex justify-center items-center text-center">
         <span>🎁 Birthday gifts | Surprise gifts | Anniversary gifts | Return gifts bulk orders available!</span>
     </div>
 
     <!-- Header / Navbar -->
-    <header class="border-b border-[#d4af37]/30 py-4 px-6 flex justify-between items-center bg-black/90 sticky top-0 z-50 backdrop-blur-md">
+    <header class="border-b border-[#d4af37]/30 py-4 px-6 flex justify-between items-center bg-black/90 sticky top-[41px] z-45 backdrop-blur-md">
         <!-- Crystal Clear Text Logo -->
         <div class="flex items-center space-x-2 cursor-pointer ml-2" onclick="switchCategory('womens')">
             <h1 class="text-3xl font-bold tracking-widest gold-text flex items-center space-x-2">
@@ -276,6 +281,18 @@
             <div id="cart-summary" class="hidden border-t border-gray-800 pt-4 mb-6 space-y-2">
                 <div class="flex justify-between text-gray-300"><span>Subtotal:</span> <span id="cart-subtotal">₹0</span></div>
                 <div class="flex justify-between text-gray-300"><span>Delivery Fee:</span> <span id="cart-delivery">₹0</span></div>
+                
+                <!-- Diwali Coupon Input Section inside Cart -->
+                <div class="py-3 border-t border-b border-gray-800 my-2 space-y-2">
+                    <label class="block text-xs uppercase tracking-wider text-amber-400 font-bold">Diwali Special Offer</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="couponInput" placeholder="Enter DIWALI26" class="w-full bg-black border border-[#d4af37]/50 rounded p-2 text-sm text-white uppercase tracking-wider focus:outline-none focus:border-[#d4af37]">
+                        <button type="button" onclick="applyDiwaliCoupon()" class="bg-amber-600 hover:bg-amber-700 text-black font-bold px-4 py-2 rounded text-sm transition gold-bg">Apply</button>
+                    </div>
+                    <p id="couponFeedback" class="text-xs font-semibold"></p>
+                </div>
+
+                <div class="flex justify-between text-gray-300" id="discount-row" style="display: none;"><span>Diwali Discount (15% OFF):</span> <span id="cart-discount" class="text-green-400">₹0</span></div>
                 <div class="flex justify-between font-bold text-xl gold-text pt-2 border-t border-gray-800"><span>Total Amount:</span> <span id="cart-total">₹0</span></div>
             </div>
 
@@ -315,6 +332,8 @@
     <script>
         const WHATSAPP_NUMBER = "917337498887"; 
         let cart = JSON.parse(localStorage.getItem('kezu_cart')) || [];
+        let couponApplied = false;
+        let discountPercent = 0;
 
         window.onload = function() {
             assignNamesByFilename();
@@ -521,85 +540,114 @@
             let uniqueCartKey = idKey + "_" + price;
 
             let item = cart.find(i => i.cartKey === uniqueCartKey);
-            let genderType = idKey.startsWith('w-') ? 'Women' : (idKey.startsWith('m-') ? 'Men' : 'KEZU Duo');
-
+            
             if (item && item.qty > 0) {
                 actionBox.innerHTML = `
-                    <div class="flex items-center justify-between border border-[#d4af37] rounded p-2 bg-black">
-                        <span class="text-xs text-gray-400">Qty:</span>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="changeCardQty('${idKey}', -1)" class="gold-text px-2 py-0.5 border border-[#d4af37]/50 rounded hover:bg-[#d4af37] hover:text-black transition font-bold">-</button>
-                            <span class="font-bold text-white">${item.qty}</span>
-                            <button onclick="changeCardQty('${idKey}', 1)" class="gold-text px-2 py-0.5 border border-[#d4af37]/50 rounded hover:bg-[#d4af37] hover:text-black transition font-bold">+</button>
-                        </div>
+                    <div class="flex items-center justify-between bg-black border border-[#d4af37] rounded p-1">
+                        <button onclick="changeCardQty('${idKey}', -1)" class="bg-[#222] text-[#d4af37] px-3 py-1 rounded font-bold hover:bg-[#333] transition">-</button>
+                        <span class="font-bold text-white">${item.qty} in Cart</span>
+                        <button onclick="changeCardQty('${idKey}', 1)" class="bg-[#d4af37] text-black px-3 py-1 rounded font-bold hover:opacity-90 transition">+</button>
                     </div>
                 `;
             } else {
-                let btnText = genderType === 'KEZU Duo' ? 'Add Duo to Cart' : 'Add to Cart';
+                let btnText = "Add to Cart";
+                let typeVal = actionBox.id.includes('c-') ? "KEZU Duo" : (actionBox.id.includes('w-') ? "Women" : "Men");
                 actionBox.innerHTML = `
-                    <button onclick="addToCart('${idKey}', '${genderType}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">${btnText}</button>
+                    <button onclick="addToCart('${idKey}', '${typeVal}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
                 `;
+            }
+        }
+
+        function applyDiwaliCoupon() {
+            let code = document.getElementById('couponInput').value.trim().toUpperCase();
+            let feedback = document.getElementById('couponFeedback');
+            
+            if (code === "DIWALI26") {
+                couponApplied = true;
+                discountPercent = 0.15;
+                feedback.style.color = "#4ade80";
+                feedback.innerText = "🎉 15% Coupon Applied Successfully!";
+                updateCartUI();
+            } else {
+                couponApplied = false;
+                discountPercent = 0;
+                feedback.style.color = "#f87171";
+                feedback.innerText = "❌ Invalid Coupon Code. Try 'DIWALI26'";
+                updateCartUI();
             }
         }
 
         function updateCartUI() {
             const cartItemsContainer = document.getElementById('cart-items');
-            const cartCountContainer = document.getElementById('cart-count');
             const cartSummary = document.getElementById('cart-summary');
-            const checkoutForm = document.getElementById('checkout-form-container');
+            const checkoutFormContainer = document.getElementById('checkout-form-container');
             const checkoutBtn = document.getElementById('checkout-btn');
+            const cartCount = document.getElementById('cart-count');
 
-            let totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            cartCountContainer.innerText = totalItemsCount;
+            let totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            cartCount.innerText = totalCount;
 
             if (cart.length === 0) {
-                cartItemsContainer.innerHTML = 'Your cart is empty.';
+                cartItemsContainer.innerHTML = "Your cart is empty.";
                 cartSummary.classList.add('hidden');
-                checkoutForm.classList.add('hidden');
+                checkoutFormContainer.classList.add('hidden');
                 checkoutBtn.classList.add('hidden');
                 return;
             }
 
             cartSummary.classList.remove('hidden');
-            checkoutForm.classList.remove('hidden');
+            checkoutFormContainer.classList.remove('hidden');
             checkoutBtn.classList.remove('hidden');
 
-            let html = '<div class="space-y-4">';
+            let html = "";
             let subtotal = 0;
 
             cart.forEach(item => {
                 let itemTotal = item.price * item.qty;
                 subtotal += itemTotal;
+
                 html += `
-                    <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                    <div class="flex justify-between items-center border-b border-gray-800 py-3">
                         <div class="flex items-center space-x-3">
-                            <img src="${item.image}" class="w-14 h-14 object-cover rounded border border-[#d4af37]/30">
+                            <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded border border-[#d4af37]/30">
                             <div>
                                 <h4 class="font-bold text-white">${item.name}</h4>
-                                <p class="text-xs text-gray-400">Size: ${item.size} | Price: ₹${item.price}</p>
+                                <p class="text-xs text-gray-400">${item.size} | ₹${item.price} each</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="flex items-center space-x-2 border border-gray-700 rounded px-2 py-1">
-                                <button onclick="changeQty('${item.cartKey}', -1)" class="gold-text font-bold px-1">-</button>
-                                <span class="text-white text-sm font-semibold">${item.qty}</span>
-                                <button onclick="changeQty('${item.cartKey}', 1)" class="gold-text font-bold px-1">+</button>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center border border-gray-700 rounded bg-black">
+                                <button onclick="changeQty('${item.cartKey}', -1)" class="px-2.5 py-1 text-gray-300 hover:text-white">-</button>
+                                <span class="px-2 text-xs font-bold text-white">${item.qty}</span>
+                                <button onclick="changeQty('${item.cartKey}', 1)" class="px-2.5 py-1 text-gray-300 hover:text-white">+</button>
                             </div>
-                            <span class="font-bold gold-text">₹${itemTotal}</span>
+                            <span class="font-bold text-[#d4af37] w-16 text-right">₹${itemTotal}</span>
                         </div>
                     </div>
                 `;
             });
 
-            html += '</div>';
             cartItemsContainer.innerHTML = html;
 
-            let deliveryFee = totalItemsCount >= 2 ? 0 : 100;
-            let grandTotal = subtotal + deliveryFee;
+            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
+            let deliveryFee = totalBottles >= 2 ? 0 : 100;
 
             document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
-            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
-            document.getElementById('cart-total').innerText = `₹${grandTotal}`;
+            document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
+
+            let finalTotal = subtotal + deliveryFee;
+            let discountRow = document.getElementById('discount-row');
+
+            if (couponApplied) {
+                let discountAmount = Math.round(subtotal * discountPercent);
+                finalTotal = subtotal - discountAmount + deliveryFee;
+                discountRow.style.display = "flex";
+                document.getElementById('cart-discount').innerText = `-₹${discountAmount}`;
+            } else {
+                discountRow.style.display = "none";
+            }
+
+            document.getElementById('cart-total').innerText = `₹${finalTotal}`;
         }
 
         function checkoutWhatsApp() {
@@ -609,29 +657,39 @@
             let address = document.getElementById('cust-address').value.trim();
 
             if (!name || !phone || !pincode || !address) {
-                alert("Please fill in all delivery details before proceeding to WhatsApp!");
+                alert("Please fill in all delivery details before proceeding.");
                 return;
             }
 
-            let totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let deliveryFee = totalItemsCount >= 2 ? 0 : 100;
-            let grandTotal = subtotal + deliveryFee;
-
-            let message = `🛍️ *NEW ORDER - KEZU & CO.*\n\n`;
+            let message = `🛍️ *NEW KEZU & CO. ORDER* 🛍️\n\n`;
             message += `👤 *Customer Name:* ${name}\n`;
             message += `📞 *Phone:* ${phone}\n`;
-            message += `📍 *Address:* ${address} (Pin: ${pincode})\n\n`;
+            message += `📍 *Pincode:* ${pincode}\n`;
+            message += `🏠 *Address:* ${address}\n\n`;
             message += `📦 *Order Items:*\n`;
 
-            cart.forEach((item, index) => {
-                message += `${index + 1}. *${item.name}* (${item.size}) x ${item.qty} = ₹${item.price * item.qty}\n`;
+            let subtotal = 0;
+            cart.forEach(item => {
+                let itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                message += `- ${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
             });
 
-            message += `\n💰 *Subtotal:* ₹${subtotal}\n`;
-            message += `🚚 *Delivery Fee:* ${deliveryFee === 0 ? 'FREE' : '₹100'}\n`;
-            message += `🌟 *Total Amount:* ₹${grandTotal}\n\n`;
-            message += `Please confirm my order!`;
+            let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
+            let deliveryFee = totalBottles >= 2 ? 0 : 100;
+            let finalAmount = subtotal + deliveryFee;
+
+            message += `\nSubtotal: ₹${subtotal}`;
+            message += `\nDelivery Fee: ${deliveryFee === 0 ? "FREE" : "₹" + deliveryFee}`;
+
+            if (couponApplied) {
+                let discountAmount = Math.round(subtotal * discountPercent);
+                finalAmount = subtotal - discountAmount + deliveryFee;
+                message += `\n🎟️ Coupon Applied: DIWALI26 (15% OFF) (-₹${discountAmount})`;
+            }
+
+            message += `\n💰 *Total Amount Payable: ₹${finalAmount}*`;
+            message += `\n\nPlease confirm my order!`;
 
             let encodedMessage = encodeURIComponent(message);
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
