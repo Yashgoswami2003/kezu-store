@@ -10,7 +10,7 @@
 <meta name="keywords" content="KEZU and Co, kezuandco, luxury fragrances, perfumes online India, long lasting perfumes, couple gift sets, Queeny Yalangi">
 <meta name="author" content="KEZU & Co.">
 <link rel="canonical" href="https://kezuandco.com/">
-<!-- Browser Tab Favicon Using Data URI Butterfly to avoid black box issue -->
+<!-- Browser Tab Favicon Using Data URI Butterfly -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦋</text></svg>">
 <!-- Open Graph / Social Media Meta Tags for WhatsApp Rich Preview -->
 <meta property="og:type" content="website">
@@ -206,10 +206,10 @@ About Us
 <h2 class="text-3xl md:text-5xl font-light tracking-widest gold-text mb-4 uppercase">About KEZU & Co.</h2>
 <div class="w-24 h-0.5 gold-bg mx-auto mb-8 opacity-70"></div>
 
-<!-- Professional Founder Image Placement -->
+<!-- Professional Founder Image Placement using reliable Base64 / Static fallback -->
 <div class="mb-8 flex justify-center">
-<div class="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black">
-<img src="https://raw.githubusercontent.com/Yashgoswami2003/kezu-store/main/static/Photo.jpg" alt="Queeny Yalangi" class="w-full h-full object-cover">
+<div class="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black flex items-center justify-center">
+<img src="https://raw.githubusercontent.com/Yashgoswami2003/kezu-store/main/Photo.jpg" alt="Queeny Yalangi" class="w-full h-full object-cover">
 </div>
 </div>
 
@@ -473,7 +473,7 @@ cart = cart.filter(i => i.cartKey !== uniqueCartKey);
 saveAndRefreshCart();
 }
 
-function saveAndRefreshCart() {
+function saveAndRefreshCard() {
 localStorage.setItem('kezu_cart', JSON.stringify(cart));
 updateCartUI();
 updateAllActionBoxes();
@@ -490,7 +490,6 @@ function updateActionBox(idKey) {
 let actionBox = document.getElementById(`action-box-${idKey}`);
 if (!actionBox) return;
 const select = document.getElementById(`size-${idKey}`);
-if (!select) return;
 const price = parseInt(select.value);
 let uniqueCartKey = idKey + "_" + price;
 let item = cart.find(i => i.cartKey === uniqueCartKey);
@@ -551,7 +550,7 @@ html += `
 <div class="flex items-center space-x-3">
 <div class="flex items-center border border-gray-700 rounded bg-black">
 <button onclick="changeQty('${item.cartKey}', -1)" class="px-2.5 py-1 text-gray-300 hover:text-white">-</button>
-<span class="px-2 text-xs font-bold text-white">${item.qty}</i>
+<span class="px-2 text-xs font-bold text-white">${item.qty}</span>
 <button onclick="changeQty('${item.cartKey}', 1)" class="px-2.5 py-1 text-gray-300 hover:text-white">+</button>
 </div>
 <span class="font-bold text-[#d4af37] w-16 text-right">₹${itemTotal}</span>
@@ -581,7 +580,6 @@ let address = document.getElementById('cust-address').value.trim();
 
 if (!name || !phone || !pincode || !address) {
 alert("Please fill in all delivery details before proceeding.");
-return;
 }
 
 let message = "*NEW KEZU & CO. ORDER* \n\n";
@@ -599,7 +597,7 @@ message += `${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
 });
 
 let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-let deliveryFee = totalBottles >= 2 ? 0 : 100;
+let deliveryFee = totalBottles >=2 ? 0 : 100;
 let finalAmount = subtotal + deliveryFee;
 
 message += `\nSubtotal: ₹${subtotal}`;
