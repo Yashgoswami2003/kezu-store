@@ -206,10 +206,10 @@ About Us
 <h2 class="text-3xl md:text-5xl font-light tracking-widest gold-text mb-4 uppercase">About KEZU & Co.</h2>
 <div class="w-24 h-0.5 gold-bg mx-auto mb-8 opacity-70"></div>
 
-<!-- Professional Founder Image Placement using reliable Base64 / Static fallback -->
+<!-- Professional Founder Image Placement from Root Directory -->
 <div class="mb-8 flex justify-center">
-<div class="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black flex items-center justify-center">
-<img src="https://raw.githubusercontent.com/Yashgoswami2003/kezu-store/main/Photo.jpg" alt="Queeny Yalangi" class="w-full h-full object-cover">
+<div class="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black">
+<img src="/Photo.jpg" alt="Queeny Yalangi" class="w-full h-full object-cover">
 </div>
 </div>
 
@@ -473,7 +473,7 @@ cart = cart.filter(i => i.cartKey !== uniqueCartKey);
 saveAndRefreshCart();
 }
 
-function saveAndRefreshCard() {
+function saveAndRefreshCart() {
 localStorage.setItem('kezu_cart', JSON.stringify(cart));
 updateCartUI();
 updateAllActionBoxes();
@@ -490,6 +490,7 @@ function updateActionBox(idKey) {
 let actionBox = document.getElementById(`action-box-${idKey}`);
 if (!actionBox) return;
 const select = document.getElementById(`size-${idKey}`);
+if (!select) return;
 const price = parseInt(select.value);
 let uniqueCartKey = idKey + "_" + price;
 let item = cart.find(i => i.cartKey === uniqueCartKey);
@@ -580,6 +581,7 @@ let address = document.getElementById('cust-address').value.trim();
 
 if (!name || !phone || !pincode || !address) {
 alert("Please fill in all delivery details before proceeding.");
+return;
 }
 
 let message = "*NEW KEZU & CO. ORDER* \n\n";
@@ -587,7 +589,7 @@ message += `*Customer Name:* ${name}\n`;
 message += `*Phone:* ${phone}\n`;
 message += `*Pincode:* ${pincode}\n`;
 message += `*Address:* ${address}\n\n`;
-message += `*Order Items:*\n`;
+message += `*OrderItems:*\n`;
 
 let subtotal = 0;
 cart.forEach(item => {
@@ -597,7 +599,7 @@ message += `${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
 });
 
 let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-let deliveryFee = totalBottles >=2 ? 0 : 100;
+let deliveryFee = totalBottles >= 2 ? 0 : 100;
 let finalAmount = subtotal + deliveryFee;
 
 message += `\nSubtotal: ₹${subtotal}`;
