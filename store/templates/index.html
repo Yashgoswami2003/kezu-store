@@ -206,10 +206,10 @@ About Us
 <h2 class="text-3xl md:text-5xl font-light tracking-widest gold-text mb-4 uppercase">About KEZU & Co.</h2>
 <div class="w-24 h-0.5 gold-bg mx-auto mb-8 opacity-70"></div>
 
-<!-- Professional Founder Image Placement from Root Directory -->
+<!-- Professional Founder Image Placement in Square/Rectangular Shape matching perfume style -->
 <div class="mb-8 flex justify-center">
-<div class="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black">
-<img src="/Photo.jpg" alt="Queeny Yalangi" class="w-full h-full object-cover">
+<div class="w-48 h-60 md:w-56 md:h-64 rounded-lg overflow-hidden border-2 border-[#d4af37] shadow-xl bg-black">
+<img src="{% static 'Photo.jpg' %}" alt="Queeny Yalangi" class="w-full h-full object-cover">
 </div>
 </div>
 
@@ -589,7 +589,7 @@ message += `*Customer Name:* ${name}\n`;
 message += `*Phone:* ${phone}\n`;
 message += `*Pincode:* ${pincode}\n`;
 message += `*Address:* ${address}\n\n`;
-message += `*OrderItems:*\n`;
+message += `*Order Items:*\n`;
 
 let subtotal = 0;
 cart.forEach(item => {
