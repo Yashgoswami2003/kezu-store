@@ -305,6 +305,14 @@ window.onload = function() {
 assignNamesByFilename();
 updateCartUI();
 updateAllActionBoxes();
+
+// Check URL hash on page load/refresh to keep user on the same tab
+let hash = window.location.hash.replace('#', '');
+if (hash === 'mens' || hash === 'couples' || hash === 'about') {
+switchCategory(hash);
+} else {
+switchCategory('womens');
+}
 };
 
 function assignNamesByFilename() {
@@ -388,18 +396,22 @@ if (category === 'womens') {
 womensSection.classList.remove('hidden');
 tabWomens.classList.add('active', 'text-white');
 if (mobWomens) mobWomens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+window.location.hash = 'womens';
 } else if (category === 'mens') {
 mensSection.classList.remove('hidden');
 tabMens.classList.add('active', 'text-white');
 if (mobMens) mobMens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+window.location.hash = 'mens';
 } else if (category === 'couples') {
 couplesSection.classList.remove('hidden');
 tabCouples.classList.add('active', 'text-white');
 if (mobCouples) mobCouples.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+window.location.hash = 'couples';
 } else if (category === 'about') {
 aboutSection.classList.remove('hidden');
 tabAbout.classList.add('active', 'text-white');
 if (mobAbout) mobAbout.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+window.location.hash = 'about';
 }
 }
 
