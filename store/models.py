@@ -27,3 +27,13 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} - {self.customer_name}"
+
+class Feedback(models.Model):
+    customer_name = models.CharField(max_length=100)
+    fragrance_name = models.CharField(max_length=120, blank=True)
+    rating = models.PositiveSmallIntegerField(default=5)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Feedback {self.id} - {self.customer_name}"

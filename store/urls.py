@@ -17,4 +17,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('health/', views.health_check, name='health_check'),
     path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticViewSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
+    path('submit-feedback/', views.submit_feedback, name='submit_feedback'),
 ]

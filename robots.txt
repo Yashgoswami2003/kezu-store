@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /submit-feedback/
+
+Sitemap: https://kezuandco.com/sitemap.xml

@@ -33,6 +33,10 @@ body { font-family: 'Georgia', serif; background-color: #0d0d0d; color: #f5f5f5;
 </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen flex flex-col justify-between">
+<!-- Top Feedback Confirmation Banner (Does NOT redirect to WhatsApp) -->
+<div id="top-feedback-banner" class="hidden bg-green-700 text-white py-3 px-4 text-center text-sm font-semibold tracking-wide sticky top-0 z-[60] shadow-lg">
+<span id="top-feedback-text">Thank you for your feedback!</span>
+</div>
 <!-- Top Announcement Bar -->
 <div class="bg-[#d4af37] text-black py-2.5 px-4 font-semibold text-sm tracking-wide flex justify-center items-center text-center sticky top-0 z-50">
 <span>Birthday gifts | Surprise gifts | Anniversary gifts | Return gifts bulk orders available!</span>
@@ -57,6 +61,9 @@ Men's Collection
 <button id="tab-couples" onclick="switchCategory('couples')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
 KEZU Duo
 </button>
+<button id="tab-car" onclick="switchCategory('car')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
+Car Perfume
+</button>
 <button id="tab-about" onclick="switchCategory('about')" class="tab-btn text-gray-400 py-1 hover:text-[#d4af37] transition">
 About Us
 </button>
@@ -72,6 +79,8 @@ About Us
 <button id="mob-tab-mens" onclick="switchCategory('mens')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Men's</button>
 <span class="text-gray-600">|</span>
 <button id="mob-tab-couples" onclick="switchCategory('couples')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">KEZU Duo</button>
+<span class="text-gray-600">|</span>
+<button id="mob-tab-car" onclick="switchCategory('car')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Car Perfume</button>
 <span class="text-gray-600">|</span>
 <button id="mob-tab-about" onclick="switchCategory('about')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">About Us</button>
 </div>
@@ -200,6 +209,45 @@ About Us
 {% endfor %}
 </div>
 </section>
+<!-- CAR PERFUME SECTION -->
+<section id="car-section" class="mb-20 hidden">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-light tracking-wide mb-3 gold-text">CAR PERFUME</h2>
+<p class="text-gray-400 italic">Refreshing & Long Lasting Fragrances for Your Drive</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+{% for product in products %}
+{% if "CAR" in product.category.name|upper or "CAR PERFUME" in product.title|upper %}
+<div class="border border-[#d4af37]/40 rounded-lg p-6 bg-[#111] flex flex-col justify-between shadow-lg h-full">
+<div>
+<div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
+{% if product.image %}
+<img id="img-car-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
+{% endif %}
+</div>
+<h3 id="pname-car-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
+{{ product.title }}
+</h3>
+<p id="pdesc-car-{{ forloop.counter }}" class="text-gray-300 text-sm leading-relaxed mb-4 whitespace-pre-line text-center md:text-left">{{ product.description }}</p>
+</div>
+<div>
+<div class="mb-4">
+<label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Price</label>
+<select id="size-car-{{ forloop.counter }}" class="w-full bg-black border border-[#d4af37] text-white p-2 rounded" onchange="updatePrice('car-{{ forloop.counter }}')">
+<option value="399" data-price="399" data-size="Car Perfume">Car Perfume - 399/-</option>
+</select>
+<div class="text-xl font-bold gold-text mt-2" id="price-display-car-{{ forloop.counter }}">399</div>
+<p class="text-xs text-[#d4af37] mt-1">Delivery Charge: ₹100 per item</p>
+</div>
+<div id="action-box-car-{{ forloop.counter }}">
+<button onclick="addToCart('car-{{ forloop.counter }}', 'Car Perfume')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
+</div>
+</div>
+</div>
+{% endif %}
+{% endfor %}
+</div>
+</section>
 <!-- ABOUT KEZU & CO. SECTION -->
 <section id="about-section" class="mb-20 hidden">
 <div class="max-w-4xl mx-auto border border-[#d4af37]/40 p-8 md:p-12 rounded-2xl bg-[#111] shadow-2xl text-center relative">
@@ -291,6 +339,40 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 </div>
 <button onclick="checkoutWhatsApp()" id="checkout-btn" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hidden hover:bg-green-700 transition shadow-lg text-center mt-6">Proceed to WhatsApp Order</button>
 </div>
+<!-- Feedback Section (Saves to DB without redirecting to WhatsApp) -->
+<div id="feedback-section" class="max-w-3xl mx-auto mt-16 border border-[#d4af37]/40 p-8 rounded-xl bg-[#111] shadow-2xl">
+<h3 class="text-2xl font-bold gold-text mb-2">Share Your Feedback</h3>
+<p class="text-xs text-gray-400 mb-6">Tell us what you loved about your fragrance or car perfume.</p>
+<form id="feedback-form" onsubmit="submitFeedback(event)" class="space-y-4">
+{% csrf_token %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs text-gray-400 mb-1">Your Name *</label>
+<input type="text" id="fb-name" name="customer_name" required placeholder="Your Name" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1">Fragrance / Car Perfume (Optional)</label>
+<input type="text" id="fb-fragrance" name="fragrance_name" placeholder="e.g., Sandalwood car perfume" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+</div>
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1">Rating</label>
+<select id="fb-rating" name="rating" class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none">
+<option value="5">5 - Excellent</option>
+<option value="4">4 - Very Good</option>
+<option value="3">3 - Good</option>
+<option value="2">2 - Fair</option>
+<option value="1">1 - Needs Improvement</option>
+</select>
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1">Feedback Message *</label>
+<textarea id="fb-message" name="message" rows="3" required placeholder="Write your feedback here..." class="w-full bg-black border border-gray-700 rounded p-2.5 text-sm text-white focus:border-[#d4af37] outline-none"></textarea>
+</div>
+<div id="fb-status" class="text-sm hidden"></div>
+<button type="submit" id="fb-submit-btn" class="w-full gold-bg text-black font-semibold py-2.5 rounded-lg hover:opacity-90 transition">Submit Feedback</button>
+</form>
+</div>
 </main>
 <!-- Footer -->
 <footer class="border-t border-[#d4af37]/30 text-center py-6 text-xs text-gray-500 mt-20">
@@ -308,7 +390,7 @@ updateAllActionBoxes();
 
 // Check URL hash on page load/refresh to keep user on the same tab
 let hash = window.location.hash.replace('#', '');
-if (hash === 'mens' || hash === 'couples' || hash === 'about') {
+if (hash === 'mens' || hash === 'couples' || hash === 'car' || hash === 'about') {
 switchCategory(hash);
 } else {
 switchCategory('womens');
@@ -317,7 +399,7 @@ switchCategory('womens');
 
 function assignNamesByFilename() {
 document.querySelectorAll(".product-img").forEach(img => {
-let filename = img.getAttribute('data-filename').toLowerCase();
+let filename = (img.getAttribute('data-filename') || '').toLowerCase();
 let cardId = img.id.replace('img-', '');
 let nameElem = document.getElementById(`pname-${cardId}`);
 if (!nameElem) return;
@@ -332,6 +414,14 @@ assignedName = "REBEL & HUSTLER";
 assignedName = "STOIC & BOLD";
 } else if (filename.includes('icon') && (filename.includes('dramatic') || filename.includes('drama'))) {
 assignedName = "ICON & DRAMATIC";
+} else if (cardId.startsWith('car-') || filename.includes('sandalwood') || filename.includes('vanilla') || filename.includes('lavender') || filename.includes('fruity') || filename.includes('jasmine')) {
+let rawTitle = nameElem.innerText.trim();
+if (filename.includes('sandalwood')) assignedName = rawTitle || "SANDALWOOD CAR PERFUME";
+else if (filename.includes('vanilla')) assignedName = rawTitle || "VANILLA CAR PERFUME";
+else if (filename.includes('lavender')) assignedName = rawTitle || "LAVENDER CAR PERFUME";
+else if (filename.includes('fruity')) assignedName = rawTitle || "FRUITY FRAGRANCE CAR PERFUME";
+else if (filename.includes('jasmine')) assignedName = rawTitle || "JASMINE CAR PERFUME";
+else assignedName = rawTitle || "CAR PERFUME";
 } else if (filename.includes('dramatic')) {
 assignedName = "DRAMATIC";
 } else if (filename.includes('queen')) {
@@ -363,19 +453,23 @@ function switchCategory(category) {
 const womensSection = document.getElementById('womens-section');
 const mensSection = document.getElementById('mens-section');
 const couplesSection = document.getElementById('couples-section');
+const carSection = document.getElementById('car-section');
 const aboutSection = document.getElementById('about-section');
 const tabWomens = document.getElementById('tab-womens');
 const tabMens = document.getElementById('tab-mens');
 const tabCouples = document.getElementById('tab-couples');
+const tabCar = document.getElementById('tab-car');
 const tabAbout = document.getElementById('tab-about');
 const mobWomens = document.getElementById('mob-tab-womens');
 const mobMens = document.getElementById('mob-tab-mens');
 const mobCouples = document.getElementById('mob-tab-couples');
+const mobCar = document.getElementById('mob-tab-car');
 const mobAbout = document.getElementById('mob-tab-about');
 
 womensSection.classList.add('hidden');
 mensSection.classList.add('hidden');
 couplesSection.classList.add('hidden');
+if (carSection) carSection.classList.add('hidden');
 aboutSection.classList.add('hidden');
 
 tabWomens.classList.remove('active', 'text-white');
@@ -384,12 +478,17 @@ tabMens.classList.remove('active', 'text-white');
 tabMens.classList.add('text-gray-400');
 tabCouples.classList.remove('active', 'text-white');
 tabCouples.classList.add('text-gray-400');
+if (tabCar) {
+tabCar.classList.remove('active', 'text-white');
+tabCar.classList.add('text-gray-400');
+}
 tabAbout.classList.remove('active', 'text-white');
 tabAbout.classList.add('text-gray-400');
 
 if (mobWomens) mobWomens.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
 if (mobMens) mobMens.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
 if (mobCouples) mobCouples.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
+if (mobCar) mobCar.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
 if (mobAbout) mobAbout.className = "text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap";
 
 if (category === 'womens') {
@@ -407,6 +506,11 @@ couplesSection.classList.remove('hidden');
 tabCouples.classList.add('active', 'text-white');
 if (mobCouples) mobCouples.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
 window.location.hash = 'couples';
+} else if (category === 'car') {
+if (carSection) carSection.classList.remove('hidden');
+if (tabCar) tabCar.classList.add('active', 'text-white');
+if (mobCar) mobCar.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
+window.location.hash = 'car';
 } else if (category === 'about') {
 aboutSection.classList.remove('hidden');
 tabAbout.classList.add('active', 'text-white');
@@ -434,7 +538,7 @@ updateActionBox(id);
 
 function addToCart(idKey, genderType) {
 const nameElem = document.getElementById(`pname-${idKey}`);
-let productName = nameElem ? nameElem.innerText.trim() : "Luxury Fragrance";
+let productName = nameElem ? nameElem.innerText.trim() : (genderType === 'Car Perfume' ? "Car Perfume" : "Luxury Fragrance");
 const imgElem = document.getElementById(`img-${idKey}`);
 const imageUrl = imgElem ? imgElem.src : "";
 const select = document.getElementById(`size-${idKey}`);
@@ -516,11 +620,24 @@ actionBox.innerHTML = `
 </div>
 `;
 } else {
-let typeVal = actionBox.id.includes('c-') ? "KEZU Duo" : (actionBox.id.includes('w-') ? "Women" : "Men");
+let typeVal = actionBox.id.includes('car-') ? "Car Perfume" : (actionBox.id.includes('c-') ? "KEZU Duo" : (actionBox.id.includes('w-') ? "Women" : "Men"));
 actionBox.innerHTML = `
 <button onclick="addToCart('${idKey}', '${typeVal}')" class="w-full gold-bg text-black font-semibold py-2 rounded hover:opacity-90 transition">Add to Cart</button>
 `;
 }
+}
+
+function calculateDeliveryFee(cartItems) {
+let carQty = cartItems
+.filter(item => item.type === 'Car Perfume' || (item.idKey && item.idKey.startsWith('car-')))
+.reduce((sum, item) => sum + item.qty, 0);
+let regularQty = cartItems
+.filter(item => !(item.type === 'Car Perfume' || (item.idKey && item.idKey.startsWith('car-'))))
+.reduce((sum, item) => sum + item.qty, 0);
+
+let carDelivery = carQty * 100;
+let regularDelivery = regularQty === 0 ? 0 : (regularQty >= 2 ? 0 : 100);
+return carDelivery + regularDelivery;
 }
 
 function updateCartUI() {
@@ -574,8 +691,7 @@ html += `
 
 cartItemsContainer.innerHTML = html;
 
-let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-let deliveryFee = totalBottles >= 2 ? 0 : 100;
+let deliveryFee = calculateDeliveryFee(cart);
 
 document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
 document.getElementById('cart-delivery').innerText = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
@@ -610,8 +726,7 @@ subtotal += itemTotal;
 message += `${item.name} (${item.size}) x ${item.qty} = ₹${itemTotal}\n`;
 });
 
-let totalBottles = cart.reduce((sum, item) => sum + item.qty, 0);
-let deliveryFee = totalBottles >= 2 ? 0 : 100;
+let deliveryFee = calculateDeliveryFee(cart);
 let finalAmount = subtotal + deliveryFee;
 
 message += `\nSubtotal: ₹${subtotal}`;
@@ -621,6 +736,82 @@ message += `\n\nPlease confirm my order!`;
 
 let encodedMessage = encodeURIComponent(message);
 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+}
+
+function getCookie(name) {
+let cookieValue = null;
+if (document.cookie && document.cookie !== '') {
+const cookies = document.cookie.split(';');
+for (let i = 0; i < cookies.length; i++) {
+const cookie = cookies[i].trim();
+if (cookie.substring(0, name.length + 1) === (name + '=')) {
+cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+break;
+}
+}
+}
+return cookieValue;
+}
+
+async function submitFeedback(event) {
+event.preventDefault();
+
+const nameVal = document.getElementById('fb-name').value.trim();
+const fragranceVal = document.getElementById('fb-fragrance').value.trim();
+const ratingVal = document.getElementById('fb-rating').value;
+const messageVal = document.getElementById('fb-message').value.trim();
+const statusElem = document.getElementById('fb-status');
+const submitBtn = document.getElementById('fb-submit-btn');
+const topBanner = document.getElementById('top-feedback-banner');
+const topBannerText = document.getElementById('top-feedback-text');
+
+const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+submitBtn.disabled = true;
+submitBtn.innerText = "Submitting...";
+
+try {
+const response = await fetch('/submit-feedback/', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': csrfToken || ''
+},
+body: JSON.stringify({
+customer_name: nameVal,
+fragrance_name: fragranceVal,
+rating: parseInt(ratingVal, 10),
+message: messageVal
+})
+});
+
+const data = await response.json();
+
+if (response.ok && data.success) {
+const thankYouMsg = data.message || "Thank you for your feedback!";
+if (topBanner && topBannerText) {
+topBannerText.innerText = thankYouMsg;
+topBanner.classList.remove('hidden');
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+statusElem.className = "text-sm text-green-400 font-semibold";
+statusElem.innerText = thankYouMsg;
+statusElem.classList.remove('hidden');
+document.getElementById('feedback-form').reset();
+} else {
+statusElem.className = "text-sm text-red-400";
+statusElem.innerText = data.error || "Could not submit feedback. Please try again.";
+statusElem.classList.remove('hidden');
+}
+} catch (err) {
+statusElem.className = "text-sm text-red-400";
+statusElem.innerText = "Network error while submitting feedback.";
+statusElem.classList.remove('hidden');
+} finally {
+submitBtn.disabled = false;
+submitBtn.innerText = "Submit Feedback";
+}
 }
 </script>
 </body>
