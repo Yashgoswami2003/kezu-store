@@ -339,8 +339,17 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 </div>
 <button onclick="checkoutWhatsApp()" id="checkout-btn" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hidden hover:bg-green-700 transition shadow-lg text-center mt-6">Proceed to WhatsApp Order</button>
 </div>
-<!-- Feedback Section (Saves to DB without redirecting to WhatsApp) -->
-<div id="feedback-section" class="max-w-3xl mx-auto mt-16 border border-[#d4af37]/40 p-8 rounded-xl bg-[#111] shadow-2xl">
+<!-- Feedback Trigger (Button + Sirf "Feedback" Neeche) & Modal -->
+<div id="feedback-trigger-wrap" class="max-w-3xl mx-auto mt-16 flex flex-col items-center gap-2">
+<button type="button" id="open-feedback-modal-btn" onclick="openFeedbackModal()" class="gold-bg text-black font-semibold px-6 py-2.5 rounded-lg hover:opacity-90 transition shadow-lg">
+Share Your Feedback
+</button>
+<span class="text-xs font-semibold gold-text tracking-wider">Feedback</span>
+</div>
+
+<div id="feedback-modal" class="hidden fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="handleFeedbackBackdropClick(event)">
+<div id="feedback-section" class="relative w-full max-w-3xl border border-[#d4af37]/40 p-8 rounded-xl bg-[#111] shadow-2xl max-h-[90vh] overflow-y-auto">
+<button type="button" onclick="closeFeedbackModal()" aria-label="Close feedback modal" class="absolute top-4 right-5 text-gray-400 hover:text-[#d4af37] text-2xl font-bold leading-none">&times;</button>
 <h3 class="text-2xl font-bold gold-text mb-2">Share Your Feedback</h3>
 <p class="text-xs text-gray-400 mb-6">Tell us what you loved about your fragrance or car perfume.</p>
 <form id="feedback-form" onsubmit="submitFeedback(event)" class="space-y-4">
@@ -372,6 +381,7 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 <div id="fb-status" class="text-sm hidden"></div>
 <button type="submit" id="fb-submit-btn" class="w-full gold-bg text-black font-semibold py-2.5 rounded-lg hover:opacity-90 transition">Submit Feedback</button>
 </form>
+</div>
 </div>
 </main>
 <!-- Footer -->
@@ -738,6 +748,28 @@ let encodedMessage = encodeURIComponent(message);
 window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
 }
 
+function openFeedbackModal() {
+const modal = document.getElementById('feedback-modal');
+if (modal) modal.classList.remove('hidden');
+}
+
+function closeFeedbackModal() {
+const modal = document.getElementById('feedback-modal');
+if (modal) modal.classList.add('hidden');
+}
+
+function handleFeedbackBackdropClick(event) {
+if (event.target && event.target.id === 'feedback-modal') {
+closeFeedbackModal();
+}
+}
+
+document.addEventListener('keydown', function(event) {
+if (event.key === 'Escape') {
+closeFeedbackModal();
+}
+});
+
 function getCookie(name) {
 let cookieValue = null;
 if (document.cookie && document.cookie !== '') {
@@ -799,6 +831,7 @@ statusElem.className = "text-sm text-green-400 font-semibold";
 statusElem.innerText = thankYouMsg;
 statusElem.classList.remove('hidden');
 document.getElementById('feedback-form').reset();
+closeFeedbackModal();
 } else {
 statusElem.className = "text-sm text-red-400";
 statusElem.innerText = data.error || "Could not submit feedback. Please try again.";
