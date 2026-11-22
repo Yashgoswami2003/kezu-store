@@ -73,7 +73,7 @@ About Us
 </div>
 </header>
 <!-- Mobile Category Switcher -->
-<div class="flex justify-center space-x-4 py-3 border-b border-gray-800 md:hidden bg-[#111] overflow-x-auto px-2">
+<div class="flex justify-start space-x-3 py-3 border-b border-gray-800 md:hidden bg-[#111] overflow-x-auto px-3">
 <button id="mob-tab-womens" onclick="switchCategory('womens')" class="text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap">Women's</button>
 <span class="text-gray-600">|</span>
 <button id="mob-tab-mens" onclick="switchCategory('mens')" class="text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">Men's</button>
@@ -99,7 +99,7 @@ About Us
 <div>
 <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
 {% if product.image %}
-<img id="img-w-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
+<img id="img-w-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain p-2 product-img" data-filename="{{ product.image.name }}">
 {% endif %}
 </div>
 <h3 id="pname-w-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
@@ -140,7 +140,7 @@ About Us
 <div>
 <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
 {% if product.image %}
-<img id="img-m-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
+<img id="img-m-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain p-2 product-img" data-filename="{{ product.image.name }}">
 {% endif %}
 </div>
 <h3 id="pname-m-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
@@ -181,7 +181,7 @@ About Us
 <div>
 <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
 {% if product.image %}
-<img id="img-c-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
+<img id="img-c-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-contain p-2 product-img" data-filename="{{ product.image.name }}">
 {% endif %}
 </div>
 <h3 id="pname-c-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
@@ -222,7 +222,7 @@ About Us
 <div>
 <div class="w-full h-72 overflow-hidden rounded mb-4 border border-[#d4af37]/20 bg-black flex items-center justify-center">
 {% if product.image %}
-<img id="img-car-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-full object-cover product-img" data-filename="{{ product.image.name }}">
+<img id="img-car-{{ forloop.counter }}" src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-full object-contain p-2 product-img" data-filename="{{ product.image.name }}">
 {% endif %}
 </div>
 <h3 id="pname-car-{{ forloop.counter }}" class="text-2xl font-bold tracking-wider gold-text uppercase mb-2 text-center">
