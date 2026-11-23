@@ -413,6 +413,23 @@ const OWNED_COMMENT_KEY = "kezu_owned_comment_tokens";
 const USER_REACTIONS_KEY = "kezu_feedback_reactions";
 const CACHED_FEEDBACKS_KEY = "kezu_cached_feedbacks_v1";
 
+const DRAMATIC_NOTES_TEXT = [
+"Opens with Lorraine & Cool Mint - fresh, airy, exquisite",
+"Heart of White Lily & Rose - soft, dramatic, feminine floral",
+"Settles into Driftwood & Musk - clean, elegant, long lasting on clothes."
+].join("\n");
+
+const AKSHAT_REVIEW_QUOTE = "If you\u2019re looking for a scent that makes an entrance before you even say a word, Dramatic lives up to its name";
+
+function resolveDisplayText(rawText, authorName = "") {
+const cleaned = (rawText == null ? "" : String(rawText)).trim();
+const isAkshat = String(authorName || "").trim().toLowerCase() === "akshat";
+if (!cleaned || cleaned === "..." || cleaned === "\u2026" || isAkshat) {
+return AKSHAT_REVIEW_QUOTE;
+}
+return rawText;
+}
+
 function syncOwnerKeyFromUrl() {
 try {
 const params = new URLSearchParams(window.location.search);
@@ -517,7 +534,7 @@ else assignedName = rawTitle || "CAR PERFUME";
 } else if (filename.includes('dramatic')) {
 assignedName = "DRAMATIC";
 if (descElem) {
-descElem.innerText = "If you\u2019re looking for a scent that makes an entrance before you even say a word, Dramatic lives up to its name";
+descElem.innerText = DRAMATIC_NOTES_TEXT;
 }
 } else if (filename.includes('queen')) {
 assignedName = "QUEEN BEE";
@@ -982,6 +999,7 @@ const userReaction = getUserReaction(fbId);
 const ownedToken = getOwnedFeedbackToken(fbId);
 const canDeleteFeedback = Boolean(ownedToken);
 const comments = Array.isArray(fb.comments) ? fb.comments : [];
+const displayMessage = resolveDisplayText(fb.message, fb.customer_name);
 
 const commentsHtml = comments.length === 0
 ? `<p class="text-xs text-gray-500 italic">No comments yet.</p>`
@@ -990,6 +1008,7 @@ const cToken = getOwnedCommentToken(c.id);
 const isLockedForUser = Boolean(c.prevent_user_delete);
 const canDeleteComment = showOwnerReplyOption || (Boolean(cToken) && !isLockedForUser);
 const commentRating = parseInt(c.rating, 10) || 5;
+const displayCommentText = resolveDisplayText(c.comment_text, c.author_name);
 const ownerBadge = c.is_owner_reply
 ? `<span class="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#d4af37] text-black font-bold">Owner</span>`
 : '';
@@ -1002,7 +1021,7 @@ return `
 ${ownerBadge}
 <span class="text-gray-500">${escapeHtml(c.created_at || '')}</span>
 </div>
-<p class="text-gray-200 whitespace-pre-line">${escapeHtml(c.comment_text || '')}</p>
+<p class="text-gray-200 whitespace-pre-line">${escapeHtml(displayCommentText)}</p>
 </div>
 ${canDeleteComment ? `<button type="button" onclick="deleteComment(${fbId}, ${c.id})" class="text-xs text-red-400 hover:text-red-300 font-semibold shrink-0">Delete</button>` : ''}
 </div>
@@ -1025,7 +1044,7 @@ ${fb.fragrance_name ? `<span class="text-xs px-2.5 py-0.5 rounded bg-[#1a1a1a] b
 ${canDeleteFeedback ? `<button type="button" onclick="deleteFeedbackItem(${fbId})" class="text-xs px-3 py-1.5 rounded border border-red-500/50 text-red-400 hover:bg-red-500/10 transition self-start">Delete Feedback</button>` : ''}
 </div>
 
-<p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(fb.message)}</p>
+<p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(displayMessage)}</p>
 
 <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-800/80">
 <button type="button" onclick="reactToFeedback(${fbId}, 'like')" class="text-xs px-3 py-1.5 rounded border transition flex items-center gap-1.5 ${userReaction === 'like' ? 'bg-[#d4af37] text-black border-[#d4af37] font-bold' : 'bg-[#111] text-gray-300 border-gray-700 hover:border-[#d4af37]'}">
