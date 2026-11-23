@@ -148,14 +148,7 @@ def index(request):
     categories = Category.objects.all()
     feedbacks_qs = Feedback.objects.filter(is_public=True).prefetch_related('comments').order_by('-created_at')
     feedbacks_data = [_serialize_feedback(fb) for fb in feedbacks_qs]
-    is_owner_session = bool(
-        request.user.is_authenticated
-        and (
-            request.user.is_staff
-            or request.user.is_superuser
-            or getattr(request.user, 'username', '') == 'Aksh924'
-        )
-    )
+    is_owner_session = _has_owner_privilege(request)
     return render(request, 'index.html', {
         'products': products,
         'categories': categories,

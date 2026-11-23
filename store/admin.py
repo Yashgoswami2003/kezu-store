@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib import admin
+from django.utils import timezone
 from .models import Category, Product, Order, Feedback, FeedbackComment
 
 
@@ -16,8 +18,34 @@ class FeedbackAdminSite(admin.AdminSite):
 feedback_admin_site = FeedbackAdminSite(name="feedback_admin")
 
 
+class FeedbackAdminForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = "__all__"
+        widgets = {
+            "owner_reply": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "cols": 60,
+                    "placeholder": "Write official owner reply shown to customers...",
+                }
+            ),
+            "message": forms.Textarea(attrs={"rows": 3, "cols": 60}),
+        }
+
+
+class FeedbackCommentInlineForm(forms.ModelForm):
+    class Meta:
+        model = FeedbackComment
+        fields = "__all__"
+        widgets = {
+            "comment_text": forms.Textarea(attrs={"rows": 2, "cols": 45}),
+        }
+
+
 class FeedbackCommentInline(admin.TabularInline):
     model = FeedbackComment
+    form = FeedbackCommentInlineForm
     extra = 1
     fields = (
         "user",
@@ -33,6 +61,7 @@ class FeedbackCommentInline(admin.TabularInline):
 
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
+    form = FeedbackAdminForm
     list_display = (
         "id",
         "customer_name",
@@ -51,7 +80,16 @@ class FeedbackAdmin(admin.ModelAdmin):
     search_fields = ("customer_name", "fragrance_name", "message", "owner_reply", "user__username")
     readonly_fields = ("owner_token", "owner_replied_at", "created_at")
     inlines = [FeedbackCommentInline]
-    actions = ["make_public", "make_private"]
+    actions = ["make_public", "make_private", "clear_owner_reply"]
+
+    def save_model(self, request, obj, form, change):
+        reply_text = (obj.owner_reply or "").strip()
+        if reply_text:
+            if not change or "owner_reply" in form.changed_data or not obj.owner_replied_at:
+                obj.owner_replied_at = timezone.now()
+        else:
+            obj.owner_replied_at = None
+        super().save_model(request, obj, form, change)
 
     @admin.display(description="Feedback Message")
     def message_preview(self, obj):
@@ -75,6 +113,10 @@ class FeedbackAdmin(admin.ModelAdmin):
     @admin.action(description="Hide selected feedbacks from public feed")
     def make_private(self, request, queryset):
         queryset.update(is_public=False)
+
+    @admin.action(description="Clear owner reply on selected feedbacks")
+    def clear_owner_reply(self, request, queryset):
+        queryset.update(owner_reply="", owner_replied_at=None)
 
     def has_module_permission(self, request):
         return bool(
