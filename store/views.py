@@ -30,6 +30,13 @@ def _has_owner_privilege(request, data=None):
     return False
 
 
+def _is_feedback_desk_owner(request, data=None):
+    path = getattr(request, 'path', '') or ''
+    if not path.startswith('/kz-fb-84n2-desk/'):
+        return False
+    return _has_owner_privilege(request, data)
+
+
 def _is_feedback_author(request, feedback_obj, provided_token=''):
     if request.user.is_authenticated and getattr(feedback_obj, 'user_id', None) == request.user.id:
         return True
@@ -104,8 +111,13 @@ def _serialize_comment(comment_obj):
     }
 
 
-def _serialize_feedback(feedback_obj):
+def _serialize_feedback(feedback_obj, request=None):
     comments_qs = feedback_obj.comments.order_by('created_at')
+    can_user_delete = bool(
+        request is not None
+        and request.user.is_authenticated
+        and getattr(feedback_obj, 'user_id', None) == request.user.id
+    )
     return {
         'id': feedback_obj.id,
         'customer_name': feedback_obj.customer_name,
@@ -122,6 +134,7 @@ def _serialize_feedback(feedback_obj):
         'dislikes_count': feedback_obj.dislikes_count,
         'owner_token': str(feedback_obj.owner_token),
         'is_public': feedback_obj.is_public,
+        'can_user_delete': can_user_delete,
         'created_at': timezone.localtime(feedback_obj.created_at).strftime('%d %b %Y, %I:%M %p'),
         'comments': [_serialize_comment(c) for c in comments_qs],
     }
@@ -147,7 +160,7 @@ def index(request):
     products = Product.objects.all()
     categories = Category.objects.all()
     feedbacks_qs = Feedback.objects.filter(is_public=True).prefetch_related('comments').order_by('-created_at')
-    feedbacks_data = [_serialize_feedback(fb) for fb in feedbacks_qs]
+    feedbacks_data = [_serialize_feedback(fb, request=request) for fb in feedbacks_qs]
     is_owner_session = _has_owner_privilege(request)
     return render(request, 'index.html', {
         'products': products,
@@ -230,7 +243,7 @@ def submit_feedback(request):
             'success': True,
             'id': feedback_obj.id,
             'owner_token': str(feedback_obj.owner_token),
-            'feedback': _serialize_feedback(feedback_obj),
+            'feedback': _serialize_feedback(feedback_obj, request=request),
             'message': 'Thank you for your feedback!'
         })
 
@@ -322,7 +335,7 @@ def add_feedback_comment(request, feedback_id):
         return JsonResponse({
             'success': True,
             'comment': _serialize_comment(comment_obj),
-            'feedback': _serialize_feedback(feedback_obj),
+            'feedback': _serialize_feedback(feedback_obj, request=request),
         })
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid request payload.'}, status=400)
@@ -364,11 +377,12 @@ def delete_feedback(request, feedback_id):
         feedback_obj = get_object_or_404(Feedback, id=feedback_id)
         data = _parse_request_data(request)
         provided_token = (data.get('owner_token') or request.headers.get('X-Owner-Token') or '').strip()
-        is_store_owner = _has_owner_privilege(request, data)
+        is_desk_owner = _is_feedback_desk_owner(request, data)
+        is_author = _is_feedback_author(request, feedback_obj, provided_token)
 
-        if not is_store_owner and not _is_feedback_author(request, feedback_obj, provided_token):
+        if not is_desk_owner and not is_author:
             return JsonResponse(
-                {'success': False, 'error': 'Only the owner or the user who created this feedback can delete it.'},
+                {'success': False, 'error': 'Only the Feedback Desk owner or the user who created this feedback can delete it.'},
                 status=403
             )
 

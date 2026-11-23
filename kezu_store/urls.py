@@ -15,11 +15,12 @@ Including another URLconf
 2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 from store.admin import feedback_admin_site
+from store import views as store_views
 
 SECRET_ADMIN_SLUG = 'kz-ops-9f4k2x'
 SECRET_FEEDBACK_ADMIN_SLUG = 'kz-fb-84n2-desk'
@@ -76,8 +77,9 @@ def blocked_admin_decoy(request, rest=''):
 
 urlpatterns = [
     path('admin/', blocked_admin_decoy),
-    path('admin/<path:rest>', blocked_admin_decoy),
+    re_path(r'^admin/(?P<rest>.*)$', blocked_admin_decoy),
     path(f'{SECRET_ADMIN_SLUG}/', admin.site.urls),
+    path(f'{SECRET_FEEDBACK_ADMIN_SLUG}/delete-feedback/<int:feedback_id>/', store_views.delete_feedback, name='desk_delete_feedback'),
     path(f'{SECRET_FEEDBACK_ADMIN_SLUG}/', feedback_admin_site.urls),
     path('', include('store.urls')),
 ]

@@ -997,7 +997,7 @@ const fbId = fb.id;
 const isCommentOpen = openCommentSections.has(String(fbId));
 const userReaction = getUserReaction(fbId);
 const ownedToken = getOwnedFeedbackToken(fbId);
-const canDeleteFeedback = showOwnerReplyOption || Boolean(ownedToken);
+const canDeleteFeedback = Boolean(ownedToken);
 const comments = Array.isArray(fb.comments) ? fb.comments : [];
 const displayMessage = resolveDisplayText(fb.message, fb.customer_name);
 const directOwnerReply = (fb.owner_reply || '').trim();
@@ -1231,9 +1231,8 @@ alert("Network error while deleting comment.");
 
 async function deleteFeedbackItem(feedbackId) {
 const fbToken = getOwnedFeedbackToken(feedbackId);
-const ownerSecret = getOwnerSecret();
-if (!fbToken && !canUseOwnerReply()) {
-alert("Only the owner or the user who created this feedback can delete it.");
+if (!fbToken) {
+alert("Only the user who created this feedback can delete it here. Owners can delete from Feedback Desk.");
 return;
 }
 const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
@@ -1245,12 +1244,10 @@ method: 'POST',
 headers: {
 'Content-Type': 'application/json',
 'X-CSRFToken': csrfToken || '',
-'X-Owner-Token': fbToken,
-'X-Owner-Secret': ownerSecret
+'X-Owner-Token': fbToken
 },
 body: JSON.stringify({
-owner_token: fbToken,
-owner_secret: ownerSecret
+owner_token: fbToken
 })
 });
 const data = await response.json();

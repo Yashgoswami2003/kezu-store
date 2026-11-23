@@ -76,6 +76,7 @@ class FeedbackAdmin(admin.ModelAdmin):
         "is_public",
         "created_at",
     )
+    list_display_links = ("id", "customer_name", "fragrance_name")
     list_filter = ("rating", "is_public", "created_at")
     search_fields = ("customer_name", "fragrance_name", "message", "owner_reply", "user__username")
     readonly_fields = ("owner_token", "owner_replied_at", "created_at")
@@ -125,6 +126,13 @@ class FeedbackAdmin(admin.ModelAdmin):
             and (request.user.is_superuser or request.user.username == "Aksh924")
         )
 
+    def has_change_permission(self, request, obj=None):
+        return bool(
+            request.user.is_active
+            and request.user.is_staff
+            and (request.user.is_superuser or request.user.username == "Aksh924")
+        )
+
     def has_delete_permission(self, request, obj=None):
         return bool(
             request.user.is_active
@@ -146,6 +154,7 @@ class FeedbackCommentAdmin(admin.ModelAdmin):
         "comment_text",
         "created_at",
     )
+    list_display_links = ("id", "feedback", "author_name")
     list_filter = ("is_owner_reply", "prevent_user_delete", "rating", "created_at")
     search_fields = ("author_name", "comment_text", "feedback__customer_name", "user__username")
     list_editable = ("prevent_user_delete",)
@@ -170,6 +179,13 @@ class FeedbackCommentAdmin(admin.ModelAdmin):
             comment.save()
 
     def has_module_permission(self, request):
+        return bool(
+            request.user.is_active
+            and request.user.is_staff
+            and (request.user.is_superuser or request.user.username == "Aksh924")
+        )
+
+    def has_change_permission(self, request, obj=None):
         return bool(
             request.user.is_active
             and request.user.is_staff
