@@ -411,6 +411,7 @@ const OWNER_KEY_STORAGE = "kezu_owner_key";
 const OWNED_FEEDBACK_KEY = "kezu_owned_feedback_tokens";
 const OWNED_COMMENT_KEY = "kezu_owned_comment_tokens";
 const USER_REACTIONS_KEY = "kezu_feedback_reactions";
+const CACHED_FEEDBACKS_KEY = "kezu_cached_feedbacks_v1";
 
 function syncOwnerKeyFromUrl() {
 try {
@@ -434,10 +435,36 @@ function canUseOwnerReply() {
 return Boolean(IS_OWNER_SESSION || getOwnerSecret());
 }
 
+function syncFeedbackCache() {
+try {
+if (Array.isArray(feedbacksData) && feedbacksData.length > 0) {
+sessionStorage.setItem(CACHED_FEEDBACKS_KEY, JSON.stringify(feedbacksData));
+}
+} catch (e) {}
+}
+
+function restoreFeedbackCacheIfEmpty() {
+if (Array.isArray(feedbacksData) && feedbacksData.length > 0) {
+syncFeedbackCache();
+return;
+}
+try {
+const raw = sessionStorage.getItem(CACHED_FEEDBACKS_KEY);
+if (raw) {
+const parsed = JSON.parse(raw);
+if (Array.isArray(parsed) && parsed.length > 0) {
+feedbacksData = parsed;
+}
+}
+} catch (e) {}
+}
+
 function initPage() {
 if (!Array.isArray(feedbacksData)) {
 feedbacksData = [];
 }
+restoreFeedbackCacheIfEmpty();
+syncFeedbackCache();
 syncOwnerKeyFromUrl();
 const modal = document.getElementById('feedback-modal');
 if (modal) modal.classList.add('hidden');
@@ -935,6 +962,7 @@ if (!listContainer) return;
 if (!Array.isArray(feedbacksData)) {
 feedbacksData = [];
 }
+syncFeedbackCache();
 
 if (badge) {
 badge.innerText = `${feedbacksData.length} ${feedbacksData.length === 1 ? 'Review' : 'Reviews'}`;
@@ -1191,6 +1219,7 @@ const data = await response.json();
 if (response.ok && data.success) {
 removeOwnedFeedbackToken(feedbackId);
 feedbacksData = feedbacksData.filter(item => item.id !== feedbackId);
+syncFeedbackCache();
 renderFeedbacksList();
 } else {
 alert(data.error || "Only the user who created this feedback can delete it.");
@@ -1242,6 +1271,7 @@ if (data.owner_token || data.feedback.owner_token) {
 setOwnedFeedbackToken(data.feedback.id, data.owner_token || data.feedback.owner_token);
 }
 feedbacksData.unshift(data.feedback);
+syncFeedbackCache();
 renderFeedbacksList();
 }
 if (topBanner && topBannerText) {
