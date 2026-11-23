@@ -13,7 +13,11 @@ import uuid
 
 
 def _has_owner_privilege(request, data=None):
-    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+    if request.user.is_authenticated and (
+        request.user.is_staff
+        or request.user.is_superuser
+        or getattr(request.user, 'username', '') == 'Aksh924'
+    ):
         return True
     configured_secret = getattr(settings, 'FEEDBACK_OWNER_SECRET', '') or os.environ.get('FEEDBACK_OWNER_SECRET', '')
     provided_secret = ''
@@ -22,6 +26,22 @@ def _has_owner_privilege(request, data=None):
     if not provided_secret:
         provided_secret = (request.headers.get('X-Owner-Secret') or '').strip()
     if configured_secret and provided_secret and provided_secret == configured_secret:
+        return True
+    return False
+
+
+def _is_feedback_author(request, feedback_obj, provided_token=''):
+    if request.user.is_authenticated and getattr(feedback_obj, 'user_id', None) == request.user.id:
+        return True
+    if _is_valid_uuid(provided_token) and str(feedback_obj.owner_token) == provided_token:
+        return True
+    return False
+
+
+def _is_comment_author(request, comment_obj, provided_token=''):
+    if request.user.is_authenticated and getattr(comment_obj, 'user_id', None) == request.user.id:
+        return True
+    if _is_valid_uuid(provided_token) and str(comment_obj.owner_token) == provided_token:
         return True
     return False
 
@@ -74,7 +94,7 @@ def _notify_owner_whatsapp(feedback_obj):
 def _serialize_comment(comment_obj):
     return {
         'id': comment_obj.id,
-        'author_name': comment_obj.author_name,
+        'author_name': 'Owner' if comment_obj.is_owner_reply else comment_obj.author_name,
         'rating': getattr(comment_obj, 'rating', 5),
         'is_owner_reply': comment_obj.is_owner_reply,
         'prevent_user_delete': bool(getattr(comment_obj, 'prevent_user_delete', False)),
@@ -92,6 +112,12 @@ def _serialize_feedback(feedback_obj):
         'fragrance_name': feedback_obj.fragrance_name,
         'rating': feedback_obj.rating,
         'message': feedback_obj.message,
+        'owner_reply': getattr(feedback_obj, 'owner_reply', '') or '',
+        'owner_replied_at': (
+            timezone.localtime(feedback_obj.owner_replied_at).strftime('%d %b %Y, %I:%M %p')
+            if getattr(feedback_obj, 'owner_replied_at', None)
+            else ''
+        ),
         'likes_count': feedback_obj.likes_count,
         'dislikes_count': feedback_obj.dislikes_count,
         'owner_token': str(feedback_obj.owner_token),
@@ -122,7 +148,14 @@ def index(request):
     categories = Category.objects.all()
     feedbacks_qs = Feedback.objects.filter(is_public=True).prefetch_related('comments').order_by('-created_at')
     feedbacks_data = [_serialize_feedback(fb) for fb in feedbacks_qs]
-    is_owner_session = bool(request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser))
+    is_owner_session = bool(
+        request.user.is_authenticated
+        and (
+            request.user.is_staff
+            or request.user.is_superuser
+            or getattr(request.user, 'username', '') == 'Aksh924'
+        )
+    )
     return render(request, 'index.html', {
         'products': products,
         'categories': categories,
@@ -189,6 +222,7 @@ def submit_feedback(request):
             )
 
         feedback_obj = Feedback.objects.create(
+            user=request.user if request.user.is_authenticated else None,
             customer_name=customer_name,
             fragrance_name=fragrance_name,
             rating=rating,
@@ -260,7 +294,7 @@ def add_feedback_comment(request, feedback_id):
         feedback_obj = get_object_or_404(Feedback, id=feedback_id, is_public=True)
         data = _parse_request_data(request)
 
-        author_name = (data.get('author_name') or data.get('name') or 'Guest').strip() or 'Guest'
+        raw_author = (data.get('author_name') or data.get('name') or 'Guest').strip() or 'Guest'
         comment_text = (data.get('comment_text') or data.get('comment') or '').strip()
         raw_rating = data.get('rating', 5)
         try:
@@ -272,21 +306,30 @@ def add_feedback_comment(request, feedback_id):
 
         requested_owner = bool(data.get('is_owner_reply', False))
         is_owner_reply = requested_owner and _has_owner_privilege(request, data)
+        author_name = 'Owner' if is_owner_reply else raw_author
 
         if not comment_text:
             return JsonResponse({'success': False, 'error': 'Please enter a comment.'}, status=400)
 
         comment_obj = FeedbackComment.objects.create(
             feedback=feedback_obj,
+            user=request.user if request.user.is_authenticated else None,
             author_name=author_name,
             rating=comment_rating,
             is_owner_reply=is_owner_reply,
+            prevent_user_delete=is_owner_reply,
             comment_text=comment_text,
         )
+
+        if is_owner_reply and bool(data.get('update_feedback_reply', False)):
+            feedback_obj.owner_reply = comment_text
+            feedback_obj.owner_replied_at = timezone.now()
+            feedback_obj.save(update_fields=['owner_reply', 'owner_replied_at'])
 
         return JsonResponse({
             'success': True,
             'comment': _serialize_comment(comment_obj),
+            'feedback': _serialize_feedback(feedback_obj),
         })
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid request payload.'}, status=400)
@@ -308,7 +351,7 @@ def delete_feedback_comment(request, comment_id):
                 status=403
             )
 
-        if not is_store_owner and (not _is_valid_uuid(provided_token) or str(comment_obj.owner_token) != provided_token):
+        if not is_store_owner and not _is_comment_author(request, comment_obj, provided_token):
             return JsonResponse(
                 {'success': False, 'error': 'You are not allowed to delete this comment.'},
                 status=403
@@ -328,10 +371,11 @@ def delete_feedback(request, feedback_id):
         feedback_obj = get_object_or_404(Feedback, id=feedback_id)
         data = _parse_request_data(request)
         provided_token = (data.get('owner_token') or request.headers.get('X-Owner-Token') or '').strip()
+        is_store_owner = _has_owner_privilege(request, data)
 
-        if not _is_valid_uuid(provided_token) or str(feedback_obj.owner_token) != provided_token:
+        if not is_store_owner and not _is_feedback_author(request, feedback_obj, provided_token):
             return JsonResponse(
-                {'success': False, 'error': 'Only the user who created this feedback can delete it.'},
+                {'success': False, 'error': 'Only the owner or the user who created this feedback can delete it.'},
                 status=403
             )
 

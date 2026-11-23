@@ -85,10 +85,7 @@ WSGI_APPLICATION = 'kezu_store.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASE_URL = os.environ.get(
-    'DATABASE_URL',
-    'postgresql://neondb_owner:npg_b21MIHvCQcVs@ep-super-mouse-bejxgeq8-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-)
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     DATABASES = {
