@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
+from django.utils import timezone
 from .models import Product, Category, Feedback, FeedbackComment
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
@@ -79,7 +80,7 @@ def _serialize_comment(comment_obj):
         'prevent_user_delete': bool(getattr(comment_obj, 'prevent_user_delete', False)),
         'comment_text': comment_obj.comment_text,
         'owner_token': str(comment_obj.owner_token),
-        'created_at': comment_obj.created_at.strftime('%d %b %Y, %I:%M %p'),
+        'created_at': timezone.localtime(comment_obj.created_at).strftime('%d %b %Y, %I:%M %p'),
     }
 
 
@@ -95,7 +96,7 @@ def _serialize_feedback(feedback_obj):
         'dislikes_count': feedback_obj.dislikes_count,
         'owner_token': str(feedback_obj.owner_token),
         'is_public': feedback_obj.is_public,
-        'created_at': feedback_obj.created_at.strftime('%d %b %Y, %I:%M %p'),
+        'created_at': timezone.localtime(feedback_obj.created_at).strftime('%d %b %Y, %I:%M %p'),
         'comments': [_serialize_comment(c) for c in comments_qs],
     }
 
