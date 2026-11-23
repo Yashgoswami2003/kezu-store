@@ -19,8 +19,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
+from store.admin import feedback_admin_site
 
 SECRET_ADMIN_SLUG = 'kz-ops-9f4k2x'
+SECRET_FEEDBACK_ADMIN_SLUG = 'kz-fb-84n2-desk'
 
 def blocked_admin_decoy(request, rest=''):
     ua = (request.META.get('HTTP_USER_AGENT') or '').lower()
@@ -76,6 +78,7 @@ urlpatterns = [
     path('admin/', blocked_admin_decoy),
     path('admin/<path:rest>', blocked_admin_decoy),
     path(f'{SECRET_ADMIN_SLUG}/', admin.site.urls),
+    path(f'{SECRET_FEEDBACK_ADMIN_SLUG}/', feedback_admin_site.urls),
     path('', include('store.urls')),
 ]
 

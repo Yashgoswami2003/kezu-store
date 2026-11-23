@@ -18,4 +18,8 @@ urlpatterns = [
     path('health/', views.health_check, name='health_check'),
     path('sitemap.xml', sitemap, {'sitemaps': {'static': StaticViewSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
     path('submit-feedback/', views.submit_feedback, name='submit_feedback'),
+    path('feedback/<int:feedback_id>/react/', views.feedback_react, name='feedback_react'),
+    path('feedback/<int:feedback_id>/comment/', views.add_feedback_comment, name='add_feedback_comment'),
+    path('feedback/comment/<int:comment_id>/delete/', views.delete_feedback_comment, name='delete_feedback_comment'),
+    path('feedback/<int:feedback_id>/delete/', views.delete_feedback, name='delete_feedback'),
 ]

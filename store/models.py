@@ -1,10 +1,13 @@
+import uuid
 from django.db import models
 
+
 class Category(models.Model):
-    name = models.CharField(max_length=50) # e.g., Male, Female
+    name = models.CharField(max_length=50)  # e.g., Male, Female
 
     def __str__(self):
         return self.name
+
 
 class Product(models.Model):
     title = models.CharField(max_length=100)
@@ -18,6 +21,7 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+
 class Order(models.Model):
     customer_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=15)
@@ -28,12 +32,31 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.customer_name}"
 
+
 class Feedback(models.Model):
     customer_name = models.CharField(max_length=100)
     fragrance_name = models.CharField(max_length=120, blank=True)
     rating = models.PositiveSmallIntegerField(default=5)
     message = models.TextField()
+    likes_count = models.PositiveIntegerField(default=0)
+    dislikes_count = models.PositiveIntegerField(default=0)
+    owner_token = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Feedback {self.id} - {self.customer_name}"
+
+
+class FeedbackComment(models.Model):
+    feedback = models.ForeignKey(Feedback, related_name='comments', on_delete=models.CASCADE)
+    author_name = models.CharField(max_length=100, default="Guest")
+    rating = models.PositiveSmallIntegerField(default=5)
+    is_owner_reply = models.BooleanField(default=False)
+    prevent_user_delete = models.BooleanField(default=False)
+    comment_text = models.TextField()
+    owner_token = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment {self.id} on Feedback {self.feedback_id}"

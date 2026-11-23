@@ -339,6 +339,17 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 </div>
 <button onclick="checkoutWhatsApp()" id="checkout-btn" class="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hidden hover:bg-green-700 transition shadow-lg text-center mt-6">Proceed to WhatsApp Order</button>
 </div>
+<!-- Public Customer Feedbacks, Like/Dislike & Comments Section -->
+<div id="public-feedbacks-wrapper" class="max-w-4xl mx-auto mt-16 border border-[#d4af37]/40 p-6 md:p-8 rounded-xl bg-[#111] shadow-2xl">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#d4af37]/20 pb-4 mb-6">
+<div>
+<h3 class="text-2xl font-bold gold-text">Customer Reviews & Feedback</h3>
+<p class="text-xs text-gray-400 mt-1">Real reviews stored on KEZU & Co. Like, dislike, or join the conversation below.</p>
+</div>
+<span id="feedback-total-badge" class="text-xs font-semibold px-3 py-1 rounded-full border border-[#d4af37]/40 text-[#d4af37] self-start sm:self-auto">0 Reviews</span>
+</div>
+<div id="public-feedbacks-list" class="space-y-6"></div>
+</div>
 <!-- Feedback Trigger (Desktop: Right Side | Mobile: Center) & Modal -->
 <div id="feedback-trigger-wrap" class="max-w-6xl mx-auto mt-10 flex justify-center md:justify-end px-4">
 <div class="flex flex-col items-center gap-1.5">
@@ -394,11 +405,44 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 <script>
 const WHATSAPP_NUMBER = "917337498887";
 let cart = JSON.parse(localStorage.getItem('kezu_cart')) || [];
+let feedbacksData = {{ feedbacks_json|default:"[]"|safe }};
+const openCommentSections = new Set();
+const IS_OWNER_SESSION = {{ is_owner_session|yesno:"true,false" }};
+const OWNER_KEY_STORAGE = "kezu_owner_key";
+const OWNED_FEEDBACK_KEY = "kezu_owned_feedback_tokens";
+const OWNED_COMMENT_KEY = "kezu_owned_comment_tokens";
+const USER_REACTIONS_KEY = "kezu_feedback_reactions";
+
+function syncOwnerKeyFromUrl() {
+try {
+const params = new URLSearchParams(window.location.search);
+const keyFromUrl = (params.get('owner_key') || '').trim();
+if (keyFromUrl) {
+localStorage.setItem(OWNER_KEY_STORAGE, keyFromUrl);
+}
+} catch (e) {}
+}
+
+function getOwnerSecret() {
+try {
+return (localStorage.getItem(OWNER_KEY_STORAGE) || '').trim();
+} catch (e) {
+return '';
+}
+}
+
+function canUseOwnerReply() {
+return Boolean(IS_OWNER_SESSION || getOwnerSecret());
+}
 
 window.onload = function() {
+syncOwnerKeyFromUrl();
+const modal = document.getElementById('feedback-modal');
+if (modal) modal.classList.add('hidden');
 assignNamesByFilename();
 updateCartUI();
 updateAllActionBoxes();
+renderFeedbacksList();
 
 // Check URL hash on page load/refresh to keep user on the same tab
 let hash = window.location.hash.replace('#', '');
@@ -787,6 +831,359 @@ break;
 return cookieValue;
 }
 
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.innerText = text == null ? '' : String(text);
+return div.innerHTML;
+}
+
+function getStoredMap(key) {
+try {
+return JSON.parse(localStorage.getItem(key)) || {};
+} catch (e) {
+return {};
+}
+}
+
+function saveStoredMap(key, obj) {
+localStorage.setItem(key, JSON.stringify(obj));
+}
+
+function getOwnedFeedbackToken(feedbackId) {
+const map = getStoredMap(OWNED_FEEDBACK_KEY);
+return map[String(feedbackId)] || '';
+}
+
+function setOwnedFeedbackToken(feedbackId, token) {
+if (!token) return;
+const map = getStoredMap(OWNED_FEEDBACK_KEY);
+map[String(feedbackId)] = token;
+saveStoredMap(OWNED_FEEDBACK_KEY, map);
+}
+
+function removeOwnedFeedbackToken(feedbackId) {
+const map = getStoredMap(OWNED_FEEDBACK_KEY);
+delete map[String(feedbackId)];
+saveStoredMap(OWNED_FEEDBACK_KEY, map);
+}
+
+function getOwnedCommentToken(commentId) {
+const map = getStoredMap(OWNED_COMMENT_KEY);
+return map[String(commentId)] || '';
+}
+
+function setOwnedCommentToken(commentId, token) {
+if (!token) return;
+const map = getStoredMap(OWNED_COMMENT_KEY);
+map[String(commentId)] = token;
+saveStoredMap(OWNED_COMMENT_KEY, map);
+}
+
+function removeOwnedCommentToken(commentId) {
+const map = getStoredMap(OWNED_COMMENT_KEY);
+delete map[String(commentId)];
+saveStoredMap(OWNED_COMMENT_KEY, map);
+}
+
+function getUserReaction(feedbackId) {
+const map = getStoredMap(USER_REACTIONS_KEY);
+return map[String(feedbackId)] || '';
+}
+
+function setUserReaction(feedbackId, action) {
+const map = getStoredMap(USER_REACTIONS_KEY);
+if (action) {
+map[String(feedbackId)] = action;
+} else {
+delete map[String(feedbackId)];
+}
+saveStoredMap(USER_REACTIONS_KEY, map);
+}
+
+function renderStars(rating) {
+const num = Math.max(1, Math.min(5, parseInt(rating, 10) || 5));
+return '★'.repeat(num) + '☆'.repeat(5 - num);
+}
+
+function toggleCommentSection(feedbackId) {
+const key = String(feedbackId);
+if (openCommentSections.has(key)) {
+openCommentSections.delete(key);
+} else {
+openCommentSections.add(key);
+}
+renderFeedbacksList();
+}
+
+function renderFeedbacksList() {
+const listContainer = document.getElementById('public-feedbacks-list');
+const badge = document.getElementById('feedback-total-badge');
+if (!listContainer) return;
+
+if (badge) {
+badge.innerText = `${feedbacksData.length} ${feedbacksData.length === 1 ? 'Review' : 'Reviews'}`;
+}
+
+if (!Array.isArray(feedbacksData) || feedbacksData.length === 0) {
+listContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">No reviews yet. Click the Feedback button to share the first review!</p>`;
+return;
+}
+
+const showOwnerReplyOption = canUseOwnerReply();
+
+listContainer.innerHTML = feedbacksData.map(fb => {
+const fbId = fb.id;
+const isCommentOpen = openCommentSections.has(String(fbId));
+const userReaction = getUserReaction(fbId);
+const ownedToken = getOwnedFeedbackToken(fbId);
+const canDeleteFeedback = Boolean(ownedToken);
+const comments = Array.isArray(fb.comments) ? fb.comments : [];
+
+const commentsHtml = comments.length === 0
+? `<p class="text-xs text-gray-500 italic">No comments yet.</p>`
+: comments.map(c => {
+const cToken = getOwnedCommentToken(c.id);
+const isLockedForUser = Boolean(c.prevent_user_delete);
+const canDeleteComment = showOwnerReplyOption || (Boolean(cToken) && !isLockedForUser);
+const commentRating = parseInt(c.rating, 10) || 5;
+const ownerBadge = c.is_owner_reply
+? `<span class="ml-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#d4af37] text-black font-bold">Owner</span>`
+: '';
+return `
+<div class="flex items-start justify-between gap-3 bg-black/70 border border-gray-800 rounded-lg p-3">
+<div class="text-xs space-y-1">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-bold text-[#d4af37]">${escapeHtml(c.author_name || 'Guest')}</span>
+<span class="text-[#d4af37] tracking-wider">${renderStars(commentRating)} (${commentRating}/5)</span>
+${ownerBadge}
+<span class="text-gray-500">${escapeHtml(c.created_at || '')}</span>
+</div>
+<p class="text-gray-200 whitespace-pre-line">${escapeHtml(c.comment_text || '')}</p>
+</div>
+${canDeleteComment ? `<button type="button" onclick="deleteComment(${fbId}, ${c.id})" class="text-xs text-red-400 hover:text-red-300 font-semibold shrink-0">Delete</button>` : ''}
+</div>
+`;
+}).join('');
+
+const ownerCheckboxHtml = `<span></span>`;
+
+return `
+<div id="feedback-card-${fbId}" class="border border-[#d4af37]/30 rounded-xl p-5 bg-black/60 space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+<div>
+<div class="flex flex-wrap items-center gap-2">
+<h4 class="text-lg font-bold text-white">${escapeHtml(fb.customer_name)}</h4>
+<span class="text-sm text-[#d4af37] tracking-wider">${renderStars(fb.rating)} (${fb.rating}/5)</span>
+${fb.fragrance_name ? `<span class="text-xs px-2.5 py-0.5 rounded bg-[#1a1a1a] border border-[#d4af37]/30 text-[#d4af37]">${escapeHtml(fb.fragrance_name)}</span>` : ''}
+</div>
+<p class="text-xs text-gray-500 mt-1">${escapeHtml(fb.created_at || '')}</p>
+</div>
+${canDeleteFeedback ? `<button type="button" onclick="deleteFeedbackItem(${fbId})" class="text-xs px-3 py-1.5 rounded border border-red-500/50 text-red-400 hover:bg-red-500/10 transition self-start">Delete Feedback</button>` : ''}
+</div>
+
+<p class="text-sm text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(fb.message)}</p>
+
+<div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-800/80">
+<button type="button" onclick="reactToFeedback(${fbId}, 'like')" class="text-xs px-3 py-1.5 rounded border transition flex items-center gap-1.5 ${userReaction === 'like' ? 'bg-[#d4af37] text-black border-[#d4af37] font-bold' : 'bg-[#111] text-gray-300 border-gray-700 hover:border-[#d4af37]'}">
+<span>👍 Like</span>
+<span id="like-count-${fbId}">${fb.likes_count || 0}</span>
+</button>
+<button type="button" onclick="reactToFeedback(${fbId}, 'dislike')" class="text-xs px-3 py-1.5 rounded border transition flex items-center gap-1.5 ${userReaction === 'dislike' ? 'bg-red-600 text-white border-red-600 font-bold' : 'bg-[#111] text-gray-300 border-gray-700 hover:border-red-400'}">
+<span>👎 Dislike</span>
+<span id="dislike-count-${fbId}">${fb.dislikes_count || 0}</span>
+</button>
+<button type="button" onclick="toggleCommentSection(${fbId})" class="text-xs px-3 py-1.5 rounded border transition flex items-center gap-1.5 ${isCommentOpen ? 'bg-[#d4af37] text-black border-[#d4af37] font-bold' : 'bg-[#111] text-gray-300 border-gray-700 hover:border-[#d4af37]'}">
+<span>💬 Comment</span>
+</button>
+</div>
+
+<div id="comment-section-${fbId}" class="${isCommentOpen ? '' : 'hidden '}pt-3 border-t border-gray-800/80 space-y-3">
+<div class="text-xs font-semibold uppercase tracking-wider text-gray-400">Comments (${comments.length})</div>
+<div class="space-y-2">${commentsHtml}</div>
+<form onsubmit="submitComment(event, ${fbId})" class="mt-3 space-y-2">
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+<input type="text" id="comment-author-${fbId}" placeholder="Your Name" class="bg-black border border-gray-700 rounded px-3 py-2 text-xs text-white focus:border-[#d4af37] outline-none">
+<select id="comment-rating-${fbId}" class="bg-black border border-gray-700 rounded px-3 py-2 text-xs text-white focus:border-[#d4af37] outline-none">
+<option value="5">★★★★★ (5)</option>
+<option value="4">★★★★☆ (4)</option>
+<option value="3">★★★☆☆ (3)</option>
+<option value="2">★★☆☆☆ (2)</option>
+<option value="1">★☆☆☆☆ (1)</option>
+</select>
+<input type="text" id="comment-text-${fbId}" required placeholder="Write a comment..." class="sm:col-span-2 bg-black border border-gray-700 rounded px-3 py-2 text-xs text-white focus:border-[#d4af37] outline-none">
+</div>
+<div class="flex flex-wrap items-center justify-between gap-2">
+${ownerCheckboxHtml}
+<button type="submit" class="gold-bg text-black text-xs font-semibold px-4 py-1.5 rounded hover:opacity-90 transition">Add Comment</button>
+</div>
+</form>
+</div>
+</div>
+`;
+}).join('');
+}
+
+async function reactToFeedback(feedbackId, clickedAction) {
+const prevAction = getUserReaction(feedbackId);
+const nextAction = prevAction === clickedAction ? 'clear' : clickedAction;
+const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+try {
+const response = await fetch(`/feedback/${feedbackId}/react/`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': csrfToken || ''
+},
+body: JSON.stringify({
+action: nextAction,
+previous_action: prevAction
+})
+});
+const data = await response.json();
+if (response.ok && data.success) {
+setUserReaction(feedbackId, nextAction === 'clear' ? '' : nextAction);
+const fbObj = feedbacksData.find(item => item.id === feedbackId);
+if (fbObj) {
+fbObj.likes_count = data.likes_count;
+fbObj.dislikes_count = data.dislikes_count;
+}
+renderFeedbacksList();
+}
+} catch (err) {
+console.error("Failed to react to feedback:", err);
+}
+}
+
+async function submitComment(event, feedbackId) {
+event.preventDefault();
+const authorInput = document.getElementById(`comment-author-${feedbackId}`);
+const ratingSelect = document.getElementById(`comment-rating-${feedbackId}`);
+const textInput = document.getElementById(`comment-text-${feedbackId}`);
+const ownerCheckbox = document.getElementById(`comment-owner-${feedbackId}`);
+const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+const authorName = authorInput ? authorInput.value.trim() : '';
+const commentRating = ratingSelect ? parseInt(ratingSelect.value, 10) || 5 : 5;
+const commentText = textInput ? textInput.value.trim() : '';
+const isOwnerReply = (canUseOwnerReply() && ownerCheckbox) ? ownerCheckbox.checked : false;
+const ownerSecret = getOwnerSecret();
+
+if (!commentText) return;
+
+try {
+const response = await fetch(`/feedback/${feedbackId}/comment/`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': csrfToken || '',
+'X-Owner-Secret': ownerSecret
+},
+body: JSON.stringify({
+author_name: authorName || (isOwnerReply ? 'KEZU & Co.' : 'Guest'),
+rating: commentRating,
+comment_text: commentText,
+is_owner_reply: isOwnerReply,
+owner_secret: ownerSecret
+})
+});
+const data = await response.json();
+if (response.ok && data.success && data.comment) {
+if (data.comment.owner_token) {
+setOwnedCommentToken(data.comment.id, data.comment.owner_token);
+}
+openCommentSections.add(String(feedbackId));
+const fbObj = feedbacksData.find(item => item.id === feedbackId);
+if (fbObj) {
+if (!Array.isArray(fbObj.comments)) fbObj.comments = [];
+fbObj.comments.push(data.comment);
+}
+if (textInput) textInput.value = '';
+renderFeedbacksList();
+} else {
+alert(data.error || "Could not add comment.");
+}
+} catch (err) {
+alert("Network error while adding comment.");
+}
+}
+
+async function deleteComment(feedbackId, commentId) {
+const cToken = getOwnedCommentToken(commentId);
+const ownerSecret = getOwnerSecret();
+if (!cToken && !canUseOwnerReply()) {
+alert("Only the creator of this comment can delete it.");
+return;
+}
+const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+try {
+const response = await fetch(`/feedback/comment/${commentId}/delete/`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': csrfToken || '',
+'X-Owner-Token': cToken,
+'X-Owner-Secret': ownerSecret
+},
+body: JSON.stringify({
+owner_token: cToken,
+owner_secret: ownerSecret
+})
+});
+const data = await response.json();
+if (response.ok && data.success) {
+removeOwnedCommentToken(commentId);
+const fbObj = feedbacksData.find(item => item.id === feedbackId);
+if (fbObj && Array.isArray(fbObj.comments)) {
+fbObj.comments = fbObj.comments.filter(c => c.id !== commentId);
+}
+renderFeedbacksList();
+} else {
+alert(data.error || "Could not delete comment.");
+}
+} catch (err) {
+alert("Network error while deleting comment.");
+}
+}
+
+async function deleteFeedbackItem(feedbackId) {
+const fbToken = getOwnedFeedbackToken(feedbackId);
+if (!fbToken) {
+alert("Only the user who created this feedback can delete it.");
+return;
+}
+const csrfInput = document.querySelector('#feedback-form input[name="csrfmiddlewaretoken"]');
+const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+try {
+const response = await fetch(`/feedback/${feedbackId}/delete/`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-CSRFToken': csrfToken || '',
+'X-Owner-Token': fbToken
+},
+body: JSON.stringify({
+owner_token: fbToken
+})
+});
+const data = await response.json();
+if (response.ok && data.success) {
+removeOwnedFeedbackToken(feedbackId);
+feedbacksData = feedbacksData.filter(item => item.id !== feedbackId);
+renderFeedbacksList();
+} else {
+alert(data.error || "Only the user who created this feedback can delete it.");
+}
+} catch (err) {
+alert("Network error while deleting feedback.");
+}
+}
+
 async function submitFeedback(event) {
 event.preventDefault();
 
@@ -824,6 +1221,13 @@ const data = await response.json();
 
 if (response.ok && data.success) {
 const thankYouMsg = data.message || "Thank you for your feedback!";
+if (data.feedback) {
+if (data.owner_token || data.feedback.owner_token) {
+setOwnedFeedbackToken(data.feedback.id, data.owner_token || data.feedback.owner_token);
+}
+feedbacksData.unshift(data.feedback);
+renderFeedbacksList();
+}
 if (topBanner && topBannerText) {
 topBannerText.innerText = thankYouMsg;
 topBanner.classList.remove('hidden');
