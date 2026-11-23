@@ -344,7 +344,6 @@ KEZU & Co. Fragrances and stories, created for every version of you.
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#d4af37]/20 pb-4 mb-6">
 <div>
 <h3 class="text-2xl font-bold gold-text">Customer Reviews & Feedback</h3>
-<p class="text-xs text-gray-400 mt-1">Real reviews stored on KEZU & Co. Like, dislike, or join the conversation below.</p>
 </div>
 <span id="feedback-total-badge" class="text-xs font-semibold px-3 py-1 rounded-full border border-[#d4af37]/40 text-[#d4af37] self-start sm:self-auto">0 Reviews</span>
 </div>
@@ -435,7 +434,10 @@ function canUseOwnerReply() {
 return Boolean(IS_OWNER_SESSION || getOwnerSecret());
 }
 
-window.onload = function() {
+function initPage() {
+if (!Array.isArray(feedbacksData)) {
+feedbacksData = [];
+}
 syncOwnerKeyFromUrl();
 const modal = document.getElementById('feedback-modal');
 if (modal) modal.classList.add('hidden');
@@ -444,20 +446,27 @@ updateCartUI();
 updateAllActionBoxes();
 renderFeedbacksList();
 
-// Check URL hash on page load/refresh to keep user on the same tab
+// Check URL hash on page load/refresh to keep user on the same tab without reloading page
 let hash = window.location.hash.replace('#', '');
 if (hash === 'mens' || hash === 'couples' || hash === 'car' || hash === 'about') {
-switchCategory(hash);
+switchCategory(hash, true);
 } else {
-switchCategory('womens');
+switchCategory('womens', true);
 }
-};
+}
+
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', initPage);
+} else {
+initPage();
+}
 
 function assignNamesByFilename() {
 document.querySelectorAll(".product-img").forEach(img => {
 let filename = (img.getAttribute('data-filename') || '').toLowerCase();
 let cardId = img.id.replace('img-', '');
 let nameElem = document.getElementById(`pname-${cardId}`);
+let descElem = document.getElementById(`pdesc-${cardId}`);
 if (!nameElem) return;
 let assignedName = "";
 if (filename.includes('charmer') && filename.includes('beautiful')) {
@@ -480,6 +489,9 @@ else if (filename.includes('jasmine')) assignedName = rawTitle || "JASMINE CAR P
 else assignedName = rawTitle || "CAR PERFUME";
 } else if (filename.includes('dramatic')) {
 assignedName = "DRAMATIC";
+if (descElem) {
+descElem.innerText = "If you\u2019re looking for a scent that makes an entrance before you even say a word, Dramatic lives up to its name";
+}
 } else if (filename.includes('queen')) {
 assignedName = "QUEEN BEE";
 } else if (filename.includes('beautiful')) {
@@ -505,7 +517,7 @@ nameElem.innerText = assignedName;
 });
 }
 
-function switchCategory(category) {
+function switchCategory(category, skipHashUpdate = false) {
 const womensSection = document.getElementById('womens-section');
 const mensSection = document.getElementById('mens-section');
 const couplesSection = document.getElementById('couples-section');
@@ -551,27 +563,27 @@ if (category === 'womens') {
 womensSection.classList.remove('hidden');
 tabWomens.classList.add('active', 'text-white');
 if (mobWomens) mobWomens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
-window.location.hash = 'womens';
+if (!skipHashUpdate && window.location.hash !== '#womens') history.replaceState(null, '', '#womens');
 } else if (category === 'mens') {
 mensSection.classList.remove('hidden');
 tabMens.classList.add('active', 'text-white');
 if (mobMens) mobMens.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
-window.location.hash = 'mens';
+if (!skipHashUpdate && window.location.hash !== '#mens') history.replaceState(null, '', '#mens');
 } else if (category === 'couples') {
 couplesSection.classList.remove('hidden');
 tabCouples.classList.add('active', 'text-white');
 if (mobCouples) mobCouples.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
-window.location.hash = 'couples';
+if (!skipHashUpdate && window.location.hash !== '#couples') history.replaceState(null, '', '#couples');
 } else if (category === 'car') {
 if (carSection) carSection.classList.remove('hidden');
 if (tabCar) tabCar.classList.add('active', 'text-white');
 if (mobCar) mobCar.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
-window.location.hash = 'car';
+if (!skipHashUpdate && window.location.hash !== '#car') history.replaceState(null, '', '#car');
 } else if (category === 'about') {
 aboutSection.classList.remove('hidden');
 tabAbout.classList.add('active', 'text-white');
 if (mobAbout) mobAbout.className = "text-xs gold-text font-bold uppercase tracking-wider whitespace-nowrap";
-window.location.hash = 'about';
+if (!skipHashUpdate && window.location.hash !== '#about') history.replaceState(null, '', '#about');
 }
 }
 
@@ -920,11 +932,15 @@ const listContainer = document.getElementById('public-feedbacks-list');
 const badge = document.getElementById('feedback-total-badge');
 if (!listContainer) return;
 
+if (!Array.isArray(feedbacksData)) {
+feedbacksData = [];
+}
+
 if (badge) {
 badge.innerText = `${feedbacksData.length} ${feedbacksData.length === 1 ? 'Review' : 'Reviews'}`;
 }
 
-if (!Array.isArray(feedbacksData) || feedbacksData.length === 0) {
+if (feedbacksData.length === 0) {
 listContainer.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">No reviews yet. Click the Feedback button to share the first review!</p>`;
 return;
 }
